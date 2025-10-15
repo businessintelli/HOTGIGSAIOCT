@@ -2,14 +2,18 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Sparkles, User, Mail, Phone, MapPin, Briefcase, Upload, ChevronDown, LogOut, Settings } from 'lucide-react'
+import { Sparkles, User, Mail, Phone, MapPin, Briefcase, Upload, ChevronDown, LogOut, Settings, CheckCircle, XCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import api from '../lib/api'
 
 export default function Profile() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [uploadStatus, setUploadStatus] = useState(null) // 'uploading', 'success', 'error'
+  const [uploadMessage, setUploadMessage] = useState('')
+  const [selectedFile, setSelectedFile] = useState(null)
   
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
@@ -39,11 +43,60 @@ export default function Profile() {
     setIsEditing(false)
   }
 
-  const handleResumeUpload = (e) => {
+  const handleResumeUpload = async (e) => {
     const file = e.target.files?.[0]
-    if (file) {
-      console.log('Uploading resume:', file.name)
-      // TODO: Implement resume upload API call
+    if (!file) return
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadStatus('error')
+      setUploadMessage('File size must be less than 5MB')
+      setTimeout(() => setUploadStatus(null), 5000)
+      return
+    }
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    if (!allowedTypes.includes(file.type)) {
+      setUploadStatus('error')
+      setUploadMessage('Please upload a PDF, DOC, or DOCX file')
+      setTimeout(() => setUploadStatus(null), 5000)
+      return
+    }
+
+    setSelectedFile(file)
+    setUploadStatus('uploading')
+    setUploadMessage('Uploading resume...')
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await api.post('/api/ai/resume/upload-analyze', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      setUploadStatus('success')
+      setUploadMessage(`Resume uploaded successfully! File: ${file.name}`)
+      
+      // Show analysis results if available
+      if (response.data.analysis) {
+        console.log('Resume Analysis:', response.data.analysis)
+      }
+
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setUploadStatus(null)
+        setSelectedFile(null)
+      }, 5000)
+
+    } catch (error) {
+      console.error('Error uploading resume:', error)
+      setUploadStatus('error')
+      setUploadMessage(error.response?.data?.detail || 'Failed to upload resume. Please try again.')
+      setTimeout(() => setUploadStatus(null), 5000)
     }
   }
 
@@ -245,7 +298,24 @@ export default function Profile() {
               {/* Resume Section */}
               <div className="border-t pt-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Resume</h2>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                
+                {/* Upload Status Messages */}
+                {uploadStatus && (
+                  <div className={`mb-4 p-4 rounded-lg flex items-center gap-3 ${
+                    uploadStatus === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
+                    uploadStatus === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
+                    'bg-blue-50 text-blue-800 border border-blue-200'
+                  }`}>
+                    {uploadStatus === 'success' && <CheckCircle className="h-5 w-5" />}
+                    {uploadStatus === 'error' && <XCircle className="h-5 w-5" />}
+                    {uploadStatus === 'uploading' && (
+                      <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                    )}
+                    <span>{uploadMessage}</span>
+                  </div>
+                )}
+
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
                   <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600 mb-4">Upload your resume to improve job matching</p>
                   <input
@@ -254,13 +324,21 @@ export default function Profile() {
                     accept=".pdf,.doc,.docx"
                     onChange={handleResumeUpload}
                     className="hidden"
+                    disabled={uploadStatus === 'uploading'}
                   />
                   <label htmlFor="resume-upload">
-                    <Button asChild>
-                      <span>Choose File</span>
+                    <Button asChild disabled={uploadStatus === 'uploading'}>
+                      <span>
+                        {uploadStatus === 'uploading' ? 'Uploading...' : 'Choose File'}
+                      </span>
                     </Button>
                   </label>
                   <p className="text-sm text-gray-500 mt-2">PDF, DOC, or DOCX (Max 5MB)</p>
+                  {selectedFile && uploadStatus !== 'uploading' && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      Selected: {selectedFile.name}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

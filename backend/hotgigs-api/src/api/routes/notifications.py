@@ -4,10 +4,10 @@ from typing import List, Optional
 from pydantic import BaseModel
 import uuid
 
-from db.session import get_db
-from models.user import User
-from core.security import get_current_user
-from services.notification_service import NotificationService
+from src.db.session import get_db
+from src.models.user import User
+from src.core.security import get_current_user
+from src.services.notification_service import NotificationService
 
 router = APIRouter()
 

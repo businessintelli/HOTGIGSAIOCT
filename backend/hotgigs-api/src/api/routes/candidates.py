@@ -3,9 +3,9 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
-from db.session import get_db
-from models.candidate import CandidateProfile, CandidateSkill, WorkExperience, Education
-from models.user import User
+from src.db.session import get_db
+from src.models.candidate import CandidateProfile, CandidateSkill, WorkExperience, Education
+from src.models.user import User
 import uuid
 
 router = APIRouter()

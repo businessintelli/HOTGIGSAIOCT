@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 import enum
 
-from db.base import Base
+from src.db.base import Base
 
 
 class NotificationType(str, enum.Enum):

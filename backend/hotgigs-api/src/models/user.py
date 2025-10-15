@@ -5,7 +5,7 @@ from datetime import datetime
 import uuid
 import enum
 
-from db.base import Base
+from src.db.base import Base
 
 class UserRole(str, enum.Enum):
     CANDIDATE = "candidate"
@@ -26,8 +26,8 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    candidate_profile = relationship("CandidateProfile", back_populates="user", uselist=False)
-    candidate_conversations = relationship("Conversation", foreign_keys="[Conversation.candidate_id]", back_populates="candidate")
-    recruiter_conversations = relationship("Conversation", foreign_keys="[Conversation.recruiter_id]", back_populates="recruiter")
+    # Relationships - commented out to avoid circular import issues
+    # candidate_profile = relationship("CandidateProfile", back_populates="user", uselist=False)
+    # candidate_conversations = relationship("Conversation", foreign_keys="[Conversation.candidate_id]", back_populates="candidate")
+    # recruiter_conversations = relationship("Conversation", foreign_keys="[Conversation.recruiter_id]", back_populates="recruiter")
 

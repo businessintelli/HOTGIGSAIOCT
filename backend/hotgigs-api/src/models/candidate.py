@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
-from db.base import Base
+from src.db.base import Base
 
 class CandidateProfile(Base):
     __tablename__ = "candidate_profiles"

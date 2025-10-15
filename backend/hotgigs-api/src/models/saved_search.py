@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
 
-from db.base import Base
+from src.db.base import Base
 
 
 class SavedSearch(Base):

@@ -4,12 +4,12 @@ from typing import List
 from pydantic import BaseModel
 import uuid
 
-from db.session import get_db
-from models.candidate import CandidateProfile, CandidateSkill
-from models.job import Job
-from models.user import User
-from core.security import get_current_user
-from services.ai_matching import AIMatchingService
+from src.db.session import get_db
+from src.models.candidate import CandidateProfile, CandidateSkill
+from src.models.job import Job
+from src.models.user import User
+from src.core.security import get_current_user
+from src.services.ai_matching import AIMatchingService
 
 router = APIRouter()
 matching_service = AIMatchingService()

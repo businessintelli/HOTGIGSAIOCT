@@ -9,9 +9,9 @@ from sqlalchemy import or_, and_, func
 from datetime import datetime
 import uuid
 
-from models.job import Job
-from models.candidate import CandidateProfile, CandidateSkill
-from models.saved_search import SavedSearch
+from src.models.job import Job
+from src.models.candidate import CandidateProfile, CandidateSkill
+from src.models.saved_search import SavedSearch
 
 
 class SearchService:

@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://localhost:3000",
-        "https://5173-ieax82bblh1eijfgixov5-97ad08b4.manusvm.computer"
+        "https://5173-ieax82bblh1eijfgixov5-97ad08b4.manusvm.computer",
+        "*"  # Allow all origins in development
     ]
     
     # Database
@@ -27,6 +28,8 @@ class Settings(BaseSettings):
     # OAuth
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
     LINKEDIN_CLIENT_ID: str = ""
     LINKEDIN_CLIENT_SECRET: str = ""
     MICROSOFT_CLIENT_ID: str = ""

@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
 
-from db.session import get_db
-from models.user import User
-from core.security import get_current_user
-from services.resume_ai import ResumeAIService
-from services.job_description_ai import JobDescriptionAIService
-from services.orion_copilot import OrionCopilotService
+from src.db.session import get_db
+from src.models.user import User
+from src.core.security import get_current_user
+from src.services.resume_ai import ResumeAIService
+from src.services.job_description_ai import JobDescriptionAIService
+from src.services.orion_copilot import OrionCopilotService
 
 router = APIRouter()
 
@@ -37,7 +37,8 @@ class JobDescriptionRequest(BaseModel):
 
 class ChatMessage(BaseModel):
     message: str
-    context: Optional[dict] = None
+    conversation_history: Optional[List[dict]] = None
+    user_context: Optional[dict] = None
 
 class InterviewPrepRequest(BaseModel):
     job_title: str
@@ -143,10 +144,17 @@ async def chat_with_orion(
 ):
     """Chat with Orion AI Copilot"""
     
+    # Merge user context with current user info
+    context = request.user_context or {}
+    context['user_id'] = str(current_user.id)
+    context['email'] = current_user.email
+    context['role'] = str(current_user.role)
+    
     response = orion_copilot.chat(
         user_id=str(current_user.id),
         message=request.message,
-        context=request.context
+        context=context,
+        conversation_history=request.conversation_history
     )
     
     return response

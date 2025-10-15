@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import uuid
 
-from models.notification import Notification, NotificationType, NotificationPreference
-from models.user import User
+from src.models.notification import Notification, NotificationType, NotificationPreference
+from src.models.user import User
 
 
 class NotificationService:

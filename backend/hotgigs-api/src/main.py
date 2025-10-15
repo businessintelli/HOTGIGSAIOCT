@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import auth, jobs, candidates, companies, applications, ai_matching, ai_services, messages
-from core.config import settings
+from src.api.routes import auth, jobs, candidates, companies, applications, ai_matching, ai_services, messages
+from src.core.config import settings
 
 app = FastAPI(
     title="HotGigs.ai API",

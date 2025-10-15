@@ -5,10 +5,10 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 import uuid
 
-from db.session import get_db
-from models.job import Company, CompanyTeamMember
-from models.user import User
-from core.security import get_current_user
+from src.db.session import get_db
+from src.models.job import Company, CompanyTeamMember
+from src.models.user import User
+from src.core.security import get_current_user
 
 router = APIRouter()
 

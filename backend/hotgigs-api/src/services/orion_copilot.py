@@ -24,7 +24,8 @@ class OrionCopilotService:
         self,
         user_id: str,
         message: str,
-        context: Dict[str, Any] = None
+        context: Dict[str, Any] = None,
+        conversation_history: List[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """
         Chat with Orion AI Copilot
@@ -33,13 +34,16 @@ class OrionCopilotService:
             user_id: User identifier
             message: User's message/question
             context: Optional context (user profile, current job, etc.)
+            conversation_history: Optional conversation history from frontend
         
         Returns:
             Dict with AI response and suggestions
         """
         
-        # Get or create conversation history
-        if user_id not in self.conversation_history:
+        # Use provided conversation history or get/create from storage
+        if conversation_history is not None:
+            self.conversation_history[user_id] = conversation_history
+        elif user_id not in self.conversation_history:
             self.conversation_history[user_id] = []
         
         # Build system prompt with context

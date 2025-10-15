@@ -5,11 +5,11 @@ from pydantic import BaseModel
 from datetime import datetime
 import uuid
 
-from db.session import get_db
-from models.job import Job, Company, CompanyTeamMember
-from models.candidate import Application
-from models.user import User
-from core.security import get_current_user
+from src.db.session import get_db
+from src.models.job import Job, Company, CompanyTeamMember
+from src.models.candidate import Application
+from src.models.user import User
+from src.core.security import get_current_user
 
 router = APIRouter()
 
