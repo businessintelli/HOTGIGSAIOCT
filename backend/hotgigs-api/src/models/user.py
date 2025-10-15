@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, DateTime, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 import enum
@@ -24,4 +25,7 @@ class User(Base):
     is_active = Column(String, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    candidate_profile = relationship("CandidateProfile", back_populates="user", uselist=False)
 
