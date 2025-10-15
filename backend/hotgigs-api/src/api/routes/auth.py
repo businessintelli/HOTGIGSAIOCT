@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, EmailStr
+from sqlalchemy.orm import Session
 from core.security import create_access_token, get_password_hash, verify_password
+from db.session import get_db
+from models.user import User, UserRole
 from datetime import timedelta
 
 router = APIRouter()
@@ -21,14 +24,12 @@ class Token(BaseModel):
     token_type: str
     user: dict
 
-# Temporary in-memory storage (will be replaced with database)
-users_db = {}
-
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserRegister):
+async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     """Register a new user"""
     # Check if user already exists
-    if user_data.email in users_db:
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
@@ -37,13 +38,18 @@ async def register(user_data: UserRegister):
     # Hash password
     hashed_password = get_password_hash(user_data.password)
     
-    # Store user
-    users_db[user_data.email] = {
-        "email": user_data.email,
-        "full_name": user_data.full_name,
-        "role": user_data.role,
-        "hashed_password": hashed_password
-    }
+    # Create new user
+    new_user = User(
+        email=user_data.email,
+        full_name=user_data.full_name,
+        role=UserRole(user_data.role.upper()),
+        hashed_password=hashed_password,
+        auth_provider="email"
+    )
+    
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
     
     # Create access token
     access_token = create_access_token(
@@ -54,17 +60,17 @@ async def register(user_data: UserRegister):
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
-            "email": user_data.email,
-            "full_name": user_data.full_name,
-            "role": user_data.role
+            "email": new_user.email,
+            "full_name": new_user.full_name,
+            "role": new_user.role.value.lower()
         }
     }
 
 @router.post("/login", response_model=Token)
-async def login(credentials: UserLogin):
+async def login(credentials: UserLogin, db: Session = Depends(get_db)):
     """Login user"""
     # Check if user exists
-    user = users_db.get(credentials.email)
+    user = db.query(User).filter(User.email == credentials.email).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -72,7 +78,7 @@ async def login(credentials: UserLogin):
         )
     
     # Verify password
-    if not verify_password(credentials.password, user["hashed_password"]):
+    if not user.hashed_password or not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
@@ -80,39 +86,55 @@ async def login(credentials: UserLogin):
     
     # Create access token
     access_token = create_access_token(
-        data={"sub": user["email"], "role": user["role"]}
+        data={"sub": user.email, "role": user.role.value.lower()}
     )
     
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
-            "email": user["email"],
-            "full_name": user["full_name"],
-            "role": user["role"]
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role.value.lower()
         }
     }
 
 @router.post("/social-login/{provider}")
-async def social_login(provider: str, token: str):
+async def social_login(provider: str, token: str, db: Session = Depends(get_db)):
     """Handle social authentication (Google, LinkedIn, Microsoft)"""
     # This is a placeholder - actual implementation would verify the token with the provider
     # For demo purposes, we'll create a mock user
     
-    mock_user = {
-        "email": f"user@{provider}.com",
-        "full_name": f"{provider.capitalize()} User",
-        "role": "candidate"
-    }
+    mock_email = f"user@{provider}.com"
+    
+    # Check if user exists
+    user = db.query(User).filter(User.email == mock_email).first()
+    
+    if not user:
+        # Create new user for social login
+        user = User(
+            email=mock_email,
+            full_name=f"{provider.capitalize()} User",
+            role=UserRole.CANDIDATE,
+            auth_provider=provider,
+            hashed_password=None  # No password for OAuth users
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
     
     # Create access token
     access_token = create_access_token(
-        data={"sub": mock_user["email"], "role": mock_user["role"]}
+        data={"sub": user.email, "role": user.role.value.lower()}
     )
     
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": mock_user
+        "user": {
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role.value.lower()
+        }
     }
 
