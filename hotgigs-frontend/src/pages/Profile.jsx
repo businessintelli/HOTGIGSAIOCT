@@ -2,7 +2,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Sparkles, User, Mail, Phone, MapPin, Briefcase, Upload, ChevronDown, LogOut, Settings, CheckCircle, XCircle } from 'lucide-react'
+import { Sparkles, User, Mail, Phone, MapPin, Briefcase, Upload, ChevronDown, LogOut, Settings, CheckCircle, XCircle, Video, Play } from 'lucide-react'
+import VideoRecordingStudio from '../components/VideoRecordingStudio'
+import VideoProfilePlayer from '../components/VideoProfilePlayer'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../lib/api'
 
@@ -14,6 +16,9 @@ export default function Profile() {
   const [uploadStatus, setUploadStatus] = useState(null) // 'uploading', 'success', 'error'
   const [uploadMessage, setUploadMessage] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
+  const [showVideoStudio, setShowVideoStudio] = useState(false)
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false)
+  const [videoProfile, setVideoProfile] = useState(null)
   
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
@@ -341,10 +346,100 @@ export default function Profile() {
                   )}
                 </div>
               </div>
+
+              {/* Video Profile Section */}
+              <div className="border-t pt-6 mt-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Video className="h-5 w-5" />
+                  Video Profile
+                </h2>
+                <p className="text-gray-600 mb-4">
+                  Record a 10-15 minute video introduction to showcase your skills, experience, and personality to potential employers.
+                </p>
+                
+                {videoProfile ? (
+                  <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-lg p-6 border border-blue-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Your Video Profile</h3>
+                        <p className="text-sm text-gray-600">Last updated: {new Date().toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => setShowVideoPlayer(true)}
+                          variant="outline"
+                          className="flex items-center gap-2"
+                        >
+                          <Play className="h-4 w-4" />
+                          Watch
+                        </Button>
+                        <Button
+                          onClick={() => setShowVideoStudio(true)}
+                          variant="outline"
+                        >
+                          Re-record
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-4">
+                      <div className="bg-white rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-blue-600">87</p>
+                        <p className="text-xs text-gray-600">AI Score</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-green-600">45</p>
+                        <p className="text-xs text-gray-600">Views</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-purple-600">12</p>
+                        <p className="text-xs text-gray-600">Recruiter Views</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-orange-600">3</p>
+                        <p className="text-xs text-gray-600">Shortlisted</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                    <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-4">Stand out with an AI-powered video introduction</p>
+                    <Button
+                      onClick={() => setShowVideoStudio(true)}
+                      className="bg-gradient-to-r from-blue-600 to-green-600"
+                    >
+                      <Video className="h-4 w-4 mr-2" />
+                      Record Video Profile
+                    </Button>
+                    <p className="text-sm text-gray-500 mt-4">Recommended: 10-15 minutes</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Video Recording Studio Modal */}
+      {showVideoStudio && (
+        <VideoRecordingStudio
+          onComplete={(videoData) => {
+            console.log('Video completed:', videoData)
+            setVideoProfile(videoData)
+            setShowVideoStudio(false)
+          }}
+          onCancel={() => setShowVideoStudio(false)}
+        />
+      )}
+
+      {/* Video Player Modal */}
+      {showVideoPlayer && videoProfile && (
+        <VideoProfilePlayer
+          videoData={videoProfile}
+          candidate={user}
+          onClose={() => setShowVideoPlayer(false)}
+        />
+      )}
     </div>
   )
 }
