@@ -1,6 +1,8 @@
 from db.base import Base
 from db.session import engine
-from models.user import User
+from models.user import User, UserRole
+from models.candidate import CandidateProfile, CandidateSkill, WorkExperience, Education, Application
+from models.job import Job, Company, CompanyTeamMember
 
 def init_db():
     """Initialize database tables"""
