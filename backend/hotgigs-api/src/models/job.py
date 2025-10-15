@@ -61,6 +61,8 @@ class Job(Base):
     company = relationship("Company", back_populates="jobs")
     poster = relationship("User", foreign_keys=[posted_by])
     applications = relationship("Application", back_populates="job", cascade="all, delete-orphan")
+    skill_requirements = relationship("JobSkillRequirement", back_populates="job", cascade="all, delete-orphan")
+    screening_questions = relationship("ScreeningQuestion", back_populates="job", cascade="all, delete-orphan")
 
 
 class Company(Base):

@@ -155,4 +155,6 @@ class Application(Base):
     # Relationships
     candidate = relationship("CandidateProfile", back_populates="applications")
     job = relationship("Job", back_populates="applications")
+    skill_assessments = relationship("CandidateSkillAssessment", back_populates="application", cascade="all, delete-orphan")
+    screening_responses = relationship("ScreeningResponse", back_populates="application", cascade="all, delete-orphan")
 
