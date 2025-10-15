@@ -1,0 +1,51 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from api.routes import auth, jobs, candidates, companies, applications
+from core.config import settings
+
+app = FastAPI(
+    title="HotGigs.ai API",
+    description="AI-Powered Job Matching Platform API",
+    version="1.0.0"
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(jobs.router, prefix="/api/jobs", tags=["Jobs"])
+app.include_router(candidates.router, prefix="/api/candidates", tags=["Candidates"])
+app.include_router(companies.router, prefix="/api/companies", tags=["Companies"])
+app.include_router(applications.router, prefix="/api/applications", tags=["Applications"])
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to HotGigs.ai API",
+        "version": "1.0.0",
+        "status": "running"
+    }
+
+@app.get("/api/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "service": "HotGigs.ai API"
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )
+
