@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: hotgigs-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hotgigs_db
+      POSTGRES_USER: hotgigs_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hotgigs_secure_password_2024}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - hotgigs-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hotgigs_user -d hotgigs_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend/hotgigs-api
+      dockerfile: Dockerfile
+    container_name: hotgigs-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://hotgigs_user:${POSTGRES_PASSWORD:-hotgigs_secure_password_2024}@postgres:5432/hotgigs_db
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production-min-32-chars}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://frontend:80
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hotgigs-network
+    volumes:
+      - ./backend/hotgigs-api/uploads:/app/uploads
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 5 &&
+        echo 'Initializing database...' &&
+        python src/db/init_db.py &&
+        echo 'Starting API server...' &&
+        python src/main.py
+      "
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./hotgigs-frontend
+      dockerfile: Dockerfile
+    container_name: hotgigs-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - hotgigs-network
+    environment:
+      VITE_API_URL: http://localhost:8000
+
+networks:
+  hotgigs-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+
