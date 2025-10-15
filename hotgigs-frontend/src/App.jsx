@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard'
 import Jobs from './pages/Jobs'
 import CompanyDashboard from './pages/CompanyDashboard'
 import PostJob from './pages/PostJob'
+import AIFeatures from './pages/AIFeatures'
 import { AuthProvider } from './contexts/AuthContext'
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/company" element={<CompanyDashboard />} />
         <Route path="/post-job" element={<PostJob />} />
         <Route path="/company-dashboard" element={<CompanyDashboard />} />
+        <Route path="/ai-features" element={<AIFeatures />} />
       </Routes>
     </Router>
     </AuthProvider>
