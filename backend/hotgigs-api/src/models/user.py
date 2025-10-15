@@ -28,4 +28,6 @@ class User(Base):
     
     # Relationships
     candidate_profile = relationship("CandidateProfile", back_populates="user", uselist=False)
+    candidate_conversations = relationship("Conversation", foreign_keys="[Conversation.candidate_id]", back_populates="candidate")
+    recruiter_conversations = relationship("Conversation", foreign_keys="[Conversation.recruiter_id]", back_populates="recruiter")
 

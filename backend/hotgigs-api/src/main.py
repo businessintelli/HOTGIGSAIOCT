@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import auth, jobs, candidates, companies, applications, ai_matching, ai_services
+from api.routes import auth, jobs, candidates, companies, applications, ai_matching, ai_services, messages
 from core.config import settings
 
 app = FastAPI(
@@ -26,6 +26,7 @@ app.include_router(companies.router, prefix="/api/companies", tags=["Companies"]
 app.include_router(applications.router, prefix="/api/applications", tags=["Applications"])
 app.include_router(ai_matching.router, prefix="/api/ai-matching", tags=["AI Matching"])
 app.include_router(ai_services.router, prefix="/api/ai", tags=["AI Services"])
+app.include_router(messages.router, prefix="/api", tags=["Messages"])
 
 @app.get("/")
 async def root():
