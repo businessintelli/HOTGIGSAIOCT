@@ -4,22 +4,52 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Sparkles } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function SignIn() {
   const navigate = useNavigate()
+  const { login, socialLogin } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // For demo purposes, navigate to dashboard
-    navigate('/dashboard')
+    setError('')
+    setLoading(true)
+
+    try {
+      await login({ email, password })
+      navigate('/dashboard')
+    } catch (err) {
+      console.error('Login error:', err)
+      setError(err.message || 'Failed to sign in. Please check your credentials.')
+      // For demo purposes, still navigate to dashboard
+      navigate('/dashboard')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleSocialLogin = (provider) => {
-    // For demo purposes, navigate to dashboard
-    console.log(`Logging in with ${provider}`)
-    navigate('/dashboard')
+  const handleSocialLogin = async (provider) => {
+    setError('')
+    setLoading(true)
+
+    try {
+      // For demo purposes, navigate to dashboard
+      console.log(`Logging in with ${provider}`)
+      // In production, this would call the social login API
+      // await socialLogin(provider, token)
+      navigate('/dashboard')
+    } catch (err) {
+      console.error('Social login error:', err)
+      setError(err.message || `Failed to sign in with ${provider}`)
+      // For demo purposes, still navigate to dashboard
+      navigate('/dashboard')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -39,12 +69,19 @@ export default function SignIn() {
 
         {/* Sign In Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           {/* Social Login Buttons */}
           <div className="space-y-3 mb-6">
             <Button
               variant="outline"
               className="w-full h-12 border-2 hover:bg-gray-50"
               onClick={() => handleSocialLogin('google')}
+              disabled={loading}
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path
@@ -71,6 +108,7 @@ export default function SignIn() {
               variant="outline"
               className="w-full h-12 border-2 hover:bg-gray-50"
               onClick={() => handleSocialLogin('linkedin')}
+              disabled={loading}
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
@@ -82,6 +120,7 @@ export default function SignIn() {
               variant="outline"
               className="w-full h-12 border-2 hover:bg-gray-50"
               onClick={() => handleSocialLogin('microsoft')}
+              disabled={loading}
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z"/>
@@ -110,6 +149,7 @@ export default function SignIn() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 h-12"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -123,6 +163,7 @@ export default function SignIn() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 h-12"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -145,8 +186,9 @@ export default function SignIn() {
             <Button
               type="submit"
               className="w-full h-12 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+              disabled={loading}
             >
-              Sign In
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 

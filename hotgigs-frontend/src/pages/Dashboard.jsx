@@ -1,25 +1,99 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Briefcase, FileText, Users, TrendingUp } from 'lucide-react'
+import { Sparkles, Briefcase, FileText, Users, TrendingUp, ChevronDown, LogOut, User, Settings } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import OrionChat from '../components/OrionChat'
 
 export default function Dashboard() {
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showOrionChat, setShowOrionChat] = useState(false)
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
+  const handleUpdateResume = () => {
+    navigate('/profile/edit')
+  }
+
+  const handleSearchJobs = () => {
+    navigate('/jobs')
+  }
+
+  const handleFindConnections = () => {
+    navigate('/connections')
+  }
+
+  const handleJobClick = (jobId) => {
+    navigate(`/jobs/${jobId}`)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <nav className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
+            <Link to="/dashboard" className="flex items-center space-x-2">
               <Sparkles className="h-8 w-8 text-blue-600" />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
                 HotGigs.ai
               </span>
-            </div>
+            </Link>
             <div className="flex items-center space-x-4">
               <Link to="/jobs">
                 <Button variant="ghost">Browse Jobs</Button>
               </Link>
-              <Button variant="outline">Profile</Button>
+              
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  Profile
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+                
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <button
+                      onClick={() => {
+                        navigate('/profile')
+                        setShowProfileMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <User className="h-4 w-4" />
+                      My Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate('/settings')
+                        setShowProfileMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </button>
+                    <hr className="my-1" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -28,7 +102,7 @@ export default function Dashboard() {
       {/* Dashboard Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome back!</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome back{user?.full_name ? `, ${user.full_name}` : ''}!</h1>
           <p className="text-gray-600 mt-2">Here's your job search overview</p>
         </div>
 
@@ -91,7 +165,11 @@ export default function Dashboard() {
               <h2 className="text-xl font-bold text-gray-900 mb-4">Recommended Jobs</h2>
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition-colors cursor-pointer">
+                  <div 
+                    key={i} 
+                    onClick={() => handleJobClick(i)}
+                    className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition-colors cursor-pointer"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900">Senior Software Engineer</h3>
@@ -113,7 +191,11 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-              <Button className="w-full mt-4" variant="outline">
+              <Button 
+                className="w-full mt-4" 
+                variant="outline"
+                onClick={handleSearchJobs}
+              >
                 View All Jobs
               </Button>
             </div>
@@ -124,15 +206,27 @@ export default function Dashboard() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-3">
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={handleUpdateResume}
+                >
                   <FileText className="h-4 w-4 mr-2" />
                   Update Resume
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={handleSearchJobs}
+                >
                   <Briefcase className="h-4 w-4 mr-2" />
                   Search Jobs
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={handleFindConnections}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Find Connections
                 </Button>
@@ -144,13 +238,25 @@ export default function Dashboard() {
               <p className="text-sm text-white/90 mb-4">
                 Get personalized advice from Orion, your AI copilot
               </p>
-              <Button className="w-full bg-white text-blue-600 hover:bg-gray-100">
+              <Button 
+                className="w-full bg-white text-blue-600 hover:bg-gray-100"
+                onClick={() => setShowOrionChat(true)}
+              >
                 Chat with Orion
               </Button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Orion Chat Modal */}
+      {showOrionChat && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <OrionChat onClose={() => setShowOrionChat(false)} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

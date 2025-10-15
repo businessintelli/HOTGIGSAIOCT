@@ -4,10 +4,10 @@ from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
-from ...db.session import get_db
-from ...models.message import Conversation, Message, ConversationStatus, MessageType
-from ...models.user import User
-from ...core.security import get_current_user
+from db.session import get_db
+from models.message import Conversation, Message, ConversationStatus, MessageType
+from models.user import User
+from core.security import get_current_user
 
 router = APIRouter(prefix="/messages", tags=["messages"])
 

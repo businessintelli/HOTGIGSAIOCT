@@ -1,12 +1,48 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Sparkles, Search, MapPin, Briefcase, Clock } from 'lucide-react'
+import { Sparkles, Search, MapPin, Briefcase, Clock, ChevronDown, LogOut, User, Settings as SettingsIcon } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Jobs() {
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [location, setLocation] = useState('')
+  const [selectedFilter, setSelectedFilter] = useState('all')
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
+  const handleSearch = () => {
+    console.log('Searching for:', searchQuery, 'in', location)
+    // TODO: Implement search API call
+  }
+
+  const handleFilterChange = (filter) => {
+    setSelectedFilter(filter)
+    console.log('Filter changed to:', filter)
+    // TODO: Implement filter logic
+  }
+
+  const handleJobClick = (jobId) => {
+    navigate(`/jobs/${jobId}`)
+  }
+
+  const handleSaveJob = (jobId, e) => {
+    e.stopPropagation()
+    console.log('Saving job:', jobId)
+    // TODO: Implement save job API call
+  }
+
+  const handleApplyNow = (jobId, e) => {
+    e.stopPropagation()
+    navigate(`/jobs/${jobId}`)
+  }
 
   const jobs = [
     {
@@ -72,7 +108,7 @@ export default function Jobs() {
       <nav className="border-b bg-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/dashboard" className="flex items-center space-x-2">
               <Sparkles className="h-8 w-8 text-blue-600" />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
                 HotGigs.ai
@@ -82,7 +118,52 @@ export default function Jobs() {
               <Link to="/dashboard">
                 <Button variant="ghost">Dashboard</Button>
               </Link>
-              <Button variant="outline">Profile</Button>
+              
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  Profile
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+                
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <button
+                      onClick={() => {
+                        navigate('/profile')
+                        setShowProfileMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <User className="h-4 w-4" />
+                      My Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate('/settings')
+                        setShowProfileMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <SettingsIcon className="h-4 w-4" />
+                      Settings
+                    </button>
+                    <hr className="my-1" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -100,6 +181,7 @@ export default function Jobs() {
                 className="pl-10 h-12"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
             <div className="flex-1 relative">
@@ -110,20 +192,54 @@ export default function Jobs() {
                 className="pl-10 h-12"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
-            <Button className="h-12 px-8 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+            <Button 
+              className="h-12 px-8 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+              onClick={handleSearch}
+            >
               Search
             </Button>
           </div>
 
           {/* Filters */}
           <div className="flex flex-wrap gap-2 mt-4">
-            <Button variant="outline" size="sm">All Jobs</Button>
-            <Button variant="outline" size="sm">Remote</Button>
-            <Button variant="outline" size="sm">Full-time</Button>
-            <Button variant="outline" size="sm">Part-time</Button>
-            <Button variant="outline" size="sm">Contract</Button>
+            <Button 
+              variant={selectedFilter === 'all' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => handleFilterChange('all')}
+            >
+              All Jobs
+            </Button>
+            <Button 
+              variant={selectedFilter === 'remote' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => handleFilterChange('remote')}
+            >
+              Remote
+            </Button>
+            <Button 
+              variant={selectedFilter === 'fulltime' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => handleFilterChange('fulltime')}
+            >
+              Full-time
+            </Button>
+            <Button 
+              variant={selectedFilter === 'parttime' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => handleFilterChange('parttime')}
+            >
+              Part-time
+            </Button>
+            <Button 
+              variant={selectedFilter === 'contract' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => handleFilterChange('contract')}
+            >
+              Contract
+            </Button>
           </div>
         </div>
 
@@ -145,6 +261,7 @@ export default function Jobs() {
           {jobs.map((job) => (
             <div
               key={job.id}
+              onClick={() => handleJobClick(job.id)}
               className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer"
             >
               <div className="flex items-start justify-between">
@@ -190,10 +307,18 @@ export default function Jobs() {
                       {job.salary}
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={(e) => handleSaveJob(job.id, e)}
+                      >
                         Save
                       </Button>
-                      <Button size="sm" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+                      <Button 
+                        size="sm" 
+                        className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                        onClick={(e) => handleApplyNow(job.id, e)}
+                      >
                         Apply Now
                       </Button>
                     </div>
@@ -206,7 +331,11 @@ export default function Jobs() {
 
         {/* Load More */}
         <div className="text-center mt-8">
-          <Button variant="outline" size="lg">
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={() => console.log('Loading more jobs...')}
+          >
             Load More Jobs
           </Button>
         </div>

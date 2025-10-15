@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Foreign
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
-from ..db.base import Base
+from db.base import Base
 
 
 class MessageType(str, enum.Enum):

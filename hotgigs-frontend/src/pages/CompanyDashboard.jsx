@@ -1,8 +1,34 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Briefcase, Users, Eye, Plus } from 'lucide-react'
+import { Sparkles, Briefcase, Users, Eye, Plus, ChevronDown, LogOut, User, Settings as SettingsIcon } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function CompanyDashboard() {
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
+  const handlePostJob = () => {
+    navigate('/post-job')
+  }
+
+  const handleViewCandidate = (candidateId) => {
+    console.log('Viewing candidate:', candidateId)
+    // TODO: Navigate to candidate details page
+    // navigate(`/candidates/${candidateId}`)
+  }
+
+  const handleContactCandidate = (candidateId) => {
+    console.log('Contacting candidate:', candidateId)
+    // TODO: Implement messaging functionality
+  }
+
   const applicants = [
     { id: 1, name: 'John Doe', position: 'Senior Software Engineer', match: 97, status: 'Not Reviewed' },
     { id: 2, name: 'Jane Smith', position: 'Senior Software Engineer', match: 92, status: 'Reviewed' },
@@ -15,7 +41,7 @@ export default function CompanyDashboard() {
       <nav className="border-b bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
+            <Link to="/company-dashboard" className="flex items-center space-x-2">
               <Sparkles className="h-8 w-8 text-blue-600" />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
                 HotGigs.ai
@@ -23,11 +49,60 @@ export default function CompanyDashboard() {
               <span className="ml-4 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                 Employer
               </span>
-            </div>
+            </Link>
             <div className="flex items-center space-x-4">
-              <Button variant="ghost">Jobs</Button>
-              <Button variant="ghost">Candidates</Button>
-              <Button variant="outline">Settings</Button>
+              <Link to="/company-dashboard">
+                <Button variant="ghost">Dashboard</Button>
+              </Link>
+              <Link to="/post-job">
+                <Button variant="ghost">Post Job</Button>
+              </Link>
+              
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  Profile
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+                
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <button
+                      onClick={() => {
+                        navigate('/profile')
+                        setShowProfileMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <User className="h-4 w-4" />
+                      My Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate('/settings')
+                        setShowProfileMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <SettingsIcon className="h-4 w-4" />
+                      Settings
+                    </button>
+                    <hr className="my-1" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -40,7 +115,10 @@ export default function CompanyDashboard() {
             <h1 className="text-3xl font-bold text-gray-900">Company Dashboard</h1>
             <p className="text-gray-600 mt-2">Manage your job postings and candidates</p>
           </div>
-          <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+          <Button 
+            className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+            onClick={handlePostJob}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Post New Job
           </Button>
@@ -147,8 +225,18 @@ export default function CompanyDashboard() {
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline">View</Button>
-                        <Button size="sm" className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewCandidate(applicant.id)}
+                        >
+                          View
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                          onClick={() => handleContactCandidate(applicant.id)}
+                        >
                           Contact
                         </Button>
                       </div>
