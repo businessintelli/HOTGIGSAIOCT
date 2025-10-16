@@ -35,13 +35,23 @@ export default function Jobs() {
 
   const handleSaveJob = (jobId, e) => {
     e.stopPropagation()
-    console.log('Saving job:', jobId)
-    // TODO: Implement save job API call
+    if (!user) {
+      // Redirect to sign-in if not logged in
+      navigate('/signin', { state: { from: `/jobs`, action: 'save', jobId } })
+    } else {
+      console.log('Saving job:', jobId)
+      // TODO: Implement save job API call
+    }
   }
 
   const handleApplyNow = (jobId, e) => {
     e.stopPropagation()
-    navigate(`/jobs/${jobId}`)
+    if (!user) {
+      // Redirect to sign-in if not logged in
+      navigate('/signin', { state: { from: `/jobs/${jobId}`, action: 'apply' } })
+    } else {
+      navigate(`/jobs/${jobId}`)
+    }
   }
 
   const jobs = [
@@ -108,19 +118,21 @@ export default function Jobs() {
       <nav className="border-b bg-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/dashboard" className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-2">
               <Sparkles className="h-8 w-8 text-blue-600" />
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
                 HotGigs.ai
               </span>
             </Link>
             <div className="flex items-center space-x-4">
-              <Link to="/dashboard">
-                <Button variant="ghost">Dashboard</Button>
-              </Link>
-              
-              {/* Profile Dropdown */}
-              <div className="relative">
+              {user ? (
+                <>
+                  <Link to="/dashboard">
+                    <Button variant="ghost">Dashboard</Button>
+                  </Link>
+                  
+                  {/* Profile Dropdown */}
+                  <div className="relative">
                 <Button 
                   variant="outline" 
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -164,6 +176,19 @@ export default function Jobs() {
                   </div>
                 )}
               </div>
+                </>
+              ) : (
+                <>
+                  <Link to="/signin">
+                    <Button variant="ghost">Sign In</Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+                      Join Now
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
