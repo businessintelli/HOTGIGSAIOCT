@@ -1,7 +1,16 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+import logging
+
+from src.services.email_service import get_email_service, EmailService
+from src.templates.email_templates import (
+    application_received_template,
+    new_application_notification_recruiter
+)
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -72,8 +81,12 @@ async def get_application(application_id: str):
     return application
 
 @router.post("/", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED)
-async def create_application(app_data: ApplicationCreate):
+async def create_application(
+    app_data: ApplicationCreate,
+    email_service: EmailService = Depends(get_email_service)
+):
     """Submit a job application"""
+    # Create application
     new_application = {
         "id": str(len(mock_applications) + 1),
         "job_id": app_data.job_id,
@@ -86,6 +99,43 @@ async def create_application(app_data: ApplicationCreate):
         "applied_date": datetime.now().strftime("%Y-%m-%d")
     }
     mock_applications.append(new_application)
+    
+    # Send confirmation email to candidate
+    try:
+        candidate_email = "candidate@example.com"  # Would be fetched from database
+        candidate_html = application_received_template(
+            new_application["candidate_name"],
+            new_application["job_title"],
+            new_application["company"]
+        )
+        await email_service.send_email(
+            to=candidate_email,
+            subject=f"Application Received - {new_application['job_title']}",
+            html=candidate_html
+        )
+        logger.info(f"Sent application confirmation email to {candidate_email}")
+    except Exception as e:
+        logger.error(f"Failed to send candidate confirmation email: {str(e)}")
+    
+    # Send notification email to recruiter
+    try:
+        recruiter_email = "recruiter@example.com"  # Would be fetched from database
+        recruiter_name = "Recruiter Name"  # Would be fetched from database
+        recruiter_html = new_application_notification_recruiter(
+            recruiter_name,
+            new_application["candidate_name"],
+            new_application["job_title"],
+            new_application["id"]
+        )
+        await email_service.send_email(
+            to=recruiter_email,
+            subject=f"New Application - {new_application['job_title']}",
+            html=recruiter_html
+        )
+        logger.info(f"Sent new application notification to {recruiter_email}")
+    except Exception as e:
+        logger.error(f"Failed to send recruiter notification email: {str(e)}")
+    
     return new_application
 
 @router.patch("/{application_id}/status")

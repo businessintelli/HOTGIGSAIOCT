@@ -4,7 +4,12 @@ from sqlalchemy.orm import Session
 from src.core.security import create_access_token, get_password_hash, verify_password
 from src.db.session import get_db
 from src.models.user import User, UserRole
+from src.services.email_service import get_email_service, EmailService
+from src.templates.email_templates import welcome_email_template
 from datetime import timedelta
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -25,7 +30,11 @@ class Token(BaseModel):
     user: dict
 
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserRegister, db: Session = Depends(get_db)):
+async def register(
+    user_data: UserRegister,
+    db: Session = Depends(get_db),
+    email_service: EmailService = Depends(get_email_service)
+):
     """Register a new user"""
     # Check if user already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -55,6 +64,19 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     access_token = create_access_token(
         data={"sub": user_data.email, "role": user_data.role}
     )
+    
+    # Send welcome email
+    try:
+        html = welcome_email_template(new_user.full_name)
+        await email_service.send_email(
+            to=new_user.email,
+            subject="Welcome to HotGigs.ai!",
+            html=html
+        )
+        logger.info(f"Sent welcome email to {new_user.email}")
+    except Exception as e:
+        logger.error(f"Failed to send welcome email: {str(e)}")
+        # Don't fail registration if email fails
     
     return {
         "access_token": access_token,

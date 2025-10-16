@@ -215,3 +215,143 @@ def welcome_email_template(user_name: str) -> str:
     </html>
     """
 
+
+
+
+def application_status_update_template(candidate_name: str, job_title: str, company_name: str, status: str) -> str:
+    """Email template for application status updates"""
+    status_messages = {
+        "reviewed": "Your application has been reviewed by the hiring team.",
+        "shortlisted": "Congratulations! You have been shortlisted for the next round.",
+        "rejected": "Thank you for your interest. We have decided to move forward with other candidates at this time.",
+        "hired": "Congratulations! We are pleased to offer you the position."
+    }
+    
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                       color: white; padding: 30px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;}}
+            .content {{ background: #f9f9f9; padding: 30px; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;}}
+            .button {{ background: #667eea; color: white !important; padding: 12px 30px; 
+                      text-decoration: none; border-radius: 5px; display: inline-block; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Application Status Update</h1>
+            </div>
+            <div class="content">
+                <p>Hi {candidate_name},</p>
+                <p>This is an update on your application for the <strong>{job_title}</strong> position at <strong>{company_name}</strong>.</p>
+                <p><strong>Status:</strong> {status.capitalize()}</p>
+                <p>{status_messages.get(status.lower(), "")}</p>
+                <p style="text-align: center; margin-top: 30px;">
+                    <a href="https://hotgigs.ai/dashboard" class="button">View Application</a>
+                </p>
+                <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                    Best regards,<br>
+                    The HotGigs.ai Team
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+def interview_reminder_template(user_name: str, job_title: str, interview_date: str, interview_time: str, interview_link: str) -> str:
+    """Email template for interview reminders"""
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                       color: white; padding: 30px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;}}
+            .content {{ background: #f9f9f9; padding: 30px; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;}}
+            .info-box {{ background: white; padding: 20px; margin: 20px 0; border-left: 4px solid #667eea; }}
+            .button {{ background: #667eea; color: white !important; padding: 12px 30px; 
+                      text-decoration: none; border-radius: 5px; display: inline-block; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Interview Reminder</h1>
+            </div>
+            <div class="content">
+                <p>Hi {user_name},</p>
+                <p>This is a reminder for your upcoming interview for the <strong>{job_title}</strong> position.</p>
+                
+                <div class="info-box">
+                    <h3>Interview Details</h3>
+                    <p><strong>Date:</strong> {interview_date}</p>
+                    <p><strong>Time:</strong> {interview_time}</p>
+                </div>
+                
+                <p style="text-align: center; margin-top: 30px;">
+                    <a href="{interview_link}" class="button">Join Interview</a>
+                </p>
+                
+                <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                    Best of luck!<br><br>
+                    Best regards,<br>
+                    The HotGigs.ai Team
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+def weekly_job_digest_template(user_name: str, jobs: list) -> str:
+    """Email template for weekly job digest"""
+    job_listings = ""
+    for job in jobs:
+        job_listings += f'''
+        <div style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 5px;">
+            <h3 style="margin-top: 0;">{job["title"]}</h3>
+            <p style="color: #555;">{job["company"]}</p>
+            <p>{job["description"]}</p>
+            <a href="{job["link"]}" style="color: #667eea; text-decoration: none;">View Job &rarr;</a>
+        </div>
+        '''
+    
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                       color: white; padding: 30px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;}}
+            .content {{ background: #f9f9f9; padding: 30px; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;}}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Your Weekly Job Digest</h1>
+            </div>
+            <div class="content">
+                <p>Hi {user_name},</p>
+                <p>Here are some new jobs this week that match your profile:</p>
+                {job_listings}
+                <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                    Best regards,<br>
+                    The HotGigs.ai Team
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+

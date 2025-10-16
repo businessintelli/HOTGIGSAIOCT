@@ -11,7 +11,10 @@ from src.templates.email_templates import (
     interview_invitation_template,
     new_application_notification_recruiter,
     password_reset_template,
-    welcome_email_template
+    welcome_email_template,
+    application_status_update_template,
+    interview_reminder_template,
+    weekly_job_digest_template
 )
 
 router = APIRouter(prefix="/api/emails", tags=["emails"])
@@ -126,6 +129,80 @@ async def send_welcome_email(
     result = await email_service.send_email(
         to=data.user_email,
         subject="Welcome to HotGigs.ai!",
+        html=html
+    )
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=result["error"])
+    return result
+
+class ApplicationStatusUpdate(BaseModel):
+    candidate_email: EmailStr
+    candidate_name: str
+    job_title: str
+    company_name: str
+    status: str
+
+@router.post("/send-status-update", status_code=200)
+async def send_application_status_update(
+    data: ApplicationStatusUpdate,
+    email_service: EmailService = Depends(get_email_service)
+):
+    """Send application status update email"""
+    html = application_status_update_template(data.candidate_name, data.job_title, data.company_name, data.status)
+    result = await email_service.send_email(
+        to=data.candidate_email,
+        subject=f"Update on your application for {data.job_title}",
+        html=html
+    )
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=result["error"])
+    return result
+
+class InterviewReminder(BaseModel):
+    user_email: EmailStr
+    user_name: str
+    job_title: str
+    interview_date: str
+    interview_time: str
+    interview_link: str
+
+@router.post("/send-interview-reminder", status_code=200)
+async def send_interview_reminder(
+    data: InterviewReminder,
+    email_service: EmailService = Depends(get_email_service)
+):
+    """Send interview reminder email"""
+    html = interview_reminder_template(data.user_name, data.job_title, data.interview_date, data.interview_time, data.interview_link)
+    result = await email_service.send_email(
+        to=data.user_email,
+        subject=f"Reminder: Interview for {data.job_title}",
+        html=html
+    )
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=result["error"])
+    return result
+
+class Job(BaseModel):
+    title: str
+    company: str
+    description: str
+    link: str
+
+class WeeklyJobDigest(BaseModel):
+    user_email: EmailStr
+    user_name: str
+    jobs: List[Job]
+
+@router.post("/send-weekly-digest", status_code=200)
+async def send_weekly_job_digest(
+    data: WeeklyJobDigest,
+    email_service: EmailService = Depends(get_email_service)
+):
+    """Send weekly job digest email"""
+    html = weekly_job_digest_template(data.user_name, [job.dict() for job in data.jobs])
+    result = await email_service.send_email(
+        to=data.user_email,
+        subject="Your Weekly Job Digest from HotGigs.ai",
         html=html
     )
     if not result["success"]:
