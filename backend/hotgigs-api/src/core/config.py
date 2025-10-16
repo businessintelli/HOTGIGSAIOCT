@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     # OpenAI
     OPENAI_API_KEY: str = ""
     
+    # Resend Email Service
+    RESEND_API_KEY: str = ""
+    RESEND_FROM_EMAIL: str = "noreply@hotgigs.com"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
