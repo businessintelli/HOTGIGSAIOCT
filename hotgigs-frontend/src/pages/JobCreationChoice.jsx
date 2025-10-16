@@ -30,7 +30,7 @@ export default function JobCreationChoice() {
           
           {/* AI-Generated Option */}
           <div className="bg-white rounded-2xl shadow-lg border-2 border-transparent hover:border-blue-500 transition-all p-8 cursor-pointer group"
-               onClick={() => navigate('/post-job?mode=ai')}>
+               onClick={() => navigate('/ai-job-generator')}>
             <div className="flex flex-col items-center text-center">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Wand2 className="h-10 w-10 text-white" />
@@ -92,7 +92,7 @@ export default function JobCreationChoice() {
                 size="lg"
                 onClick={(e) => {
                   e.stopPropagation()
-                  navigate('/post-job?mode=ai')
+                  navigate('/ai-job-generator')
                 }}
               >
                 <Sparkles className="h-5 w-5 mr-2" />
