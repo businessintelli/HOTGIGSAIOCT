@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { 
   Sparkles, User, Mail, Phone, MapPin, Briefcase, Upload, ChevronDown, 
   LogOut, Settings, CheckCircle, XCircle, Video, Play, FileText, Trash2,
-  Download, Eye
+  Eye, FileUser, Film, ClipboardList
 } from 'lucide-react'
 import VideoRecordingStudio from '../components/VideoRecordingStudio'
 import VideoProfilePlayer from '../components/VideoProfilePlayer'
@@ -21,11 +21,10 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false)
   const [uploadStatus, setUploadStatus] = useState(null)
   const [uploadMessage, setUploadMessage] = useState('')
-  const [selectedFile, setSelectedFile] = useState(null)
   const [showVideoStudio, setShowVideoStudio] = useState(false)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
-  const [showDetailsForm, setShowDetailsForm] = useState(false)
   const [profileDetails, setProfileDetails] = useState(null)
+  const [activeTab, setActiveTab] = useState('profile') // profile, video, comprehensive
   
   // Documents state
   const [savedResumes, setSavedResumes] = useState([])
@@ -90,7 +89,6 @@ export default function Profile() {
       // TODO: Save to API
       console.log('Saving profile details:', detailsData)
       setProfileDetails(detailsData)
-      setShowDetailsForm(false)
       setUploadStatus('success')
       setUploadMessage('Profile details saved successfully!')
       setTimeout(() => setUploadStatus(null), 5000)
@@ -121,88 +119,50 @@ export default function Profile() {
       return
     }
 
-    setSelectedFile(file)
     setUploadStatus('uploading')
-    setUploadMessage('Uploading and analyzing resume...')
+    setUploadMessage('Uploading and analyzing your resume...')
+
+    const formData = new FormData()
+    formData.append('file', file)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
       const response = await api.post('/api/ai/resume/upload-analyze', formData)
+      console.log('Resume uploaded successfully:', response)
       
       setUploadStatus('success')
       setUploadMessage('Resume uploaded and analyzed successfully!')
-      
-      // Add to saved resumes
-      const newResume = {
-        id: Date.now().toString(),
-        name: file.name,
-        uploaded_at: new Date().toISOString().split('T')[0],
-        size: `${(file.size / 1024).toFixed(0)} KB`,
-        is_default: savedResumes.length === 0
-      }
-      setSavedResumes(prev => [newResume, ...prev])
-      setSelectedResumeId(newResume.id)
-      
       setTimeout(() => setUploadStatus(null), 5000)
+      
+      // Reload documents
+      loadSavedDocuments()
     } catch (error) {
       console.error('Error uploading resume:', error)
       setUploadStatus('error')
-      setUploadMessage(error.response?.data?.detail || 'Failed to upload resume. Please try again.')
+      setUploadMessage('Failed to upload resume. Please try again.')
       setTimeout(() => setUploadStatus(null), 5000)
     }
   }
 
   const handleVideoComplete = (videoData) => {
-    console.log('Video completed:', videoData)
-    
-    // Add to saved videos
-    const newVideo = {
-      id: Date.now().toString(),
-      title: 'Video Introduction',
-      duration: videoData.duration,
-      uploaded_at: new Date().toISOString().split('T')[0],
-      ai_score: 0,
-      is_default: savedVideos.length === 0
-    }
-    setSavedVideos(prev => [newVideo, ...prev])
-    setSelectedVideoId(newVideo.id)
+    console.log('Video recording completed:', videoData)
     setShowVideoStudio(false)
+    // Reload videos
+    loadSavedDocuments()
   }
 
-  const deleteResume = (id) => {
-    if (confirm('Are you sure you want to delete this resume?')) {
-      setSavedResumes(prev => prev.filter(r => r.id !== id))
-      if (selectedResumeId === id) {
-        setSelectedResumeId(savedResumes[0]?.id || null)
-      }
-    }
+  const setDefaultResume = (resumeId) => {
+    console.log('Setting default resume:', resumeId)
+    // TODO: API call
   }
 
-  const deleteVideo = (id) => {
-    if (confirm('Are you sure you want to delete this video?')) {
-      setSavedVideos(prev => prev.filter(v => v.id !== id))
-      if (selectedVideoId === id) {
-        setSelectedVideoId(savedVideos[0]?.id || null)
-      }
-    }
+  const deleteResume = (resumeId) => {
+    console.log('Deleting resume:', resumeId)
+    // TODO: API call
   }
 
-  const setDefaultResume = (id) => {
-    setSavedResumes(prev => prev.map(r => ({
-      ...r,
-      is_default: r.id === id
-    })))
-    setSelectedResumeId(id)
-  }
-
-  const setDefaultVideo = (id) => {
-    setSavedVideos(prev => prev.map(v => ({
-      ...v,
-      is_default: v.id === id
-    })))
-    setSelectedVideoId(id)
+  const deleteVideo = (videoId) => {
+    console.log('Deleting video:', videoId)
+    // TODO: API call
   }
 
   const formatDuration = (seconds) => {
@@ -214,7 +174,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
-      <nav className="border-b bg-white">
+      <nav className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/dashboard" className="flex items-center space-x-2">
@@ -295,347 +255,410 @@ export default function Profile() {
                   <p className="text-gray-600">{formData.title || 'Your Title'}</p>
                 </div>
               </div>
-              <Button 
-                onClick={() => setIsEditing(!isEditing)}
-                variant={isEditing ? "default" : "outline"}
-              >
-                {isEditing ? 'Cancel' : 'Edit Profile'}
-              </Button>
             </div>
 
-            {/* Basic Information */}
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <User className="h-4 w-4 inline mr-2" />
-                    Full Name
-                  </label>
-                  <Input
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Mail className="h-4 w-4 inline mr-2" />
-                    Email
-                  </label>
-                  <Input
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your email"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Phone className="h-4 w-4 inline mr-2" />
-                    Phone
-                  </label>
-                  <Input
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <MapPin className="h-4 w-4 inline mr-2" />
-                    Location
-                  </label>
-                  <Input
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Enter your location"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Briefcase className="h-4 w-4 inline mr-2" />
-                    Professional Title
-                  </label>
-                  <Input
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="e.g., Senior Software Engineer"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bio
-                  </label>
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
-                    placeholder="Tell us about yourself..."
-                  />
-                </div>
-              </div>
-
-              {isEditing && (
-                <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSave} className="bg-gradient-to-r from-blue-600 to-green-600">
-                    Save Changes
-                  </Button>
-                </div>
-              )}
-
-              {/* Documents Section - Side by Side */}
-              <div className="border-t pt-6 mt-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">My Documents</h2>
-                
-                {/* Upload Status Messages */}
-                {uploadStatus && (
-                  <div className={`mb-4 p-4 rounded-lg flex items-center gap-3 ${
-                    uploadStatus === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
-                    uploadStatus === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
-                    'bg-blue-50 text-blue-800 border border-blue-200'
-                  }`}>
-                    {uploadStatus === 'success' && <CheckCircle className="h-5 w-5" />}
-                    {uploadStatus === 'error' && <XCircle className="h-5 w-5" />}
-                    {uploadStatus === 'uploading' && (
-                      <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                    )}
-                    <span>{uploadMessage}</span>
-                  </div>
+            {/* Upload Status Messages */}
+            {uploadStatus && (
+              <div className={`mb-4 p-4 rounded-lg flex items-center gap-3 ${
+                uploadStatus === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
+                uploadStatus === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
+                'bg-blue-50 text-blue-800 border border-blue-200'
+              }`}>
+                {uploadStatus === 'success' && <CheckCircle className="h-5 w-5" />}
+                {uploadStatus === 'error' && <XCircle className="h-5 w-5" />}
+                {uploadStatus === 'uploading' && (
+                  <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
                 )}
+                <span>{uploadMessage}</span>
+              </div>
+            )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  
-                  {/* Resume Section */}
-                  <div className="border rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-blue-600" />
-                        Resumes
-                      </h3>
-                      <input
-                        type="file"
-                        id="resume-upload"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleResumeUpload}
-                        className="hidden"
-                        disabled={uploadStatus === 'uploading'}
-                      />
-                      <label htmlFor="resume-upload">
-                        <Button size="sm" asChild disabled={uploadStatus === 'uploading'}>
-                          <span>
-                            <Upload className="h-4 w-4 mr-2" />
-                            {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload New'}
-                          </span>
-                        </Button>
+            {/* Tab Navigation */}
+            <div className="border-b border-gray-200 mb-6">
+              <nav className="flex space-x-8" aria-label="Tabs">
+                <button
+                  onClick={() => setActiveTab('profile')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                    activeTab === 'profile'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <FileUser className="h-4 w-4" />
+                  Profile & Resume
+                </button>
+                <button
+                  onClick={() => setActiveTab('video')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                    activeTab === 'video'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Film className="h-4 w-4" />
+                  Video Profile
+                  {savedVideos.length > 0 && (
+                    <Badge variant="secondary" className="ml-1">{savedVideos.length}</Badge>
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab('comprehensive')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                    activeTab === 'comprehensive'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <ClipboardList className="h-4 w-4" />
+                  Comprehensive Profile
+                  {profileDetails && <CheckCircle className="h-4 w-4 text-green-600" />}
+                </button>
+              </nav>
+            </div>
+
+            {/* Tab Content */}
+            
+            {/* Profile & Resume Tab */}
+            {activeTab === 'profile' && (
+              <div className="space-y-6">
+                {/* Basic Information */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
+                    <Button 
+                      onClick={() => setIsEditing(!isEditing)}
+                      variant={isEditing ? "default" : "outline"}
+                    >
+                      {isEditing ? 'Cancel' : 'Edit Profile'}
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <User className="h-4 w-4 inline mr-2" />
+                        Full Name
                       </label>
+                      <Input
+                        name="full_name"
+                        value={formData.full_name}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        placeholder="Enter your full name"
+                      />
                     </div>
 
-                    {savedResumes.length > 0 ? (
-                      <div className="space-y-3">
-                        {savedResumes.map(resume => (
-                          <div
-                            key={resume.id}
-                            className={`p-3 rounded-lg border-2 transition-all cursor-pointer ${
-                              selectedResumeId === resume.id
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                            onClick={() => setSelectedResumeId(resume.id)}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="h-4 w-4 text-gray-600" />
-                                  <p className="font-medium text-sm">{resume.name}</p>
-                                  {resume.is_default && (
-                                    <Badge variant="secondary" className="text-xs">Default</Badge>
-                                  )}
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {resume.size} • Uploaded {resume.uploaded_at}
-                                </p>
-                              </div>
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setDefaultResume(resume.id)
-                                  }}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    deleteResume(resume.id)
-                                  }}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-600">No resumes uploaded yet</p>
-                      </div>
-                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Mail className="h-4 w-4 inline mr-2" />
+                        Email
+                      </label>
+                      <Input
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        placeholder="Enter your email"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Phone className="h-4 w-4 inline mr-2" />
+                        Phone
+                      </label>
+                      <Input
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <MapPin className="h-4 w-4 inline mr-2" />
+                        Location
+                      </label>
+                      <Input
+                        name="location"
+                        value={formData.location}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        placeholder="Enter your location"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Briefcase className="h-4 w-4 inline mr-2" />
+                        Professional Title
+                      </label>
+                      <Input
+                        name="title"
+                        value={formData.title}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        placeholder="e.g., Senior Software Engineer"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Bio
+                      </label>
+                      <textarea
+                        name="bio"
+                        value={formData.bio}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        rows={4}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                        placeholder="Tell us about yourself..."
+                      />
+                    </div>
                   </div>
 
-                  {/* Video Profile Section */}
-                  <div className="border rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Video className="h-5 w-5 text-green-600" />
-                        Video Profiles
-                      </h3>
-                      <Button
-                        size="sm"
-                        onClick={() => setShowVideoStudio(true)}
-                        className="bg-gradient-to-r from-blue-600 to-green-600"
-                      >
-                        <Video className="h-4 w-4 mr-2" />
-                        Record New
+                  {isEditing && (
+                    <div className="flex justify-end gap-3 mt-4">
+                      <Button variant="outline" onClick={() => setIsEditing(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSave} className="bg-gradient-to-r from-blue-600 to-green-600">
+                        Save Changes
                       </Button>
                     </div>
-
-                    {savedVideos.length > 0 ? (
-                      <div className="space-y-3">
-                        {savedVideos.map(video => (
-                          <div
-                            key={video.id}
-                            className={`p-3 rounded-lg border-2 transition-all cursor-pointer ${
-                              selectedVideoId === video.id
-                                ? 'border-green-500 bg-green-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                            onClick={() => setSelectedVideoId(video.id)}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <Video className="h-4 w-4 text-gray-600" />
-                                  <p className="font-medium text-sm">{video.title}</p>
-                                  {video.is_default && (
-                                    <Badge variant="secondary" className="text-xs">Default</Badge>
-                                  )}
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {formatDuration(video.duration)} • AI Score: {video.ai_score}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  Uploaded {video.uploaded_at}
-                                </p>
-                              </div>
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setShowVideoPlayer(true)
-                                  }}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Play className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    deleteVideo(video.id)
-                                  }}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                        <Video className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-600">No video profiles yet</p>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
 
-                <p className="text-sm text-gray-500 mt-4 text-center">
-                  💡 Selected documents will be used when applying for jobs
-                </p>
-              </div>
+                {/* Resume Section */}
+                <div className="border-t pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                      My Resumes
+                    </h2>
+                    <input
+                      type="file"
+                      id="resume-upload"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleResumeUpload}
+                      className="hidden"
+                      disabled={uploadStatus === 'uploading'}
+                    />
+                    <label htmlFor="resume-upload">
+                      <Button size="sm" asChild disabled={uploadStatus === 'uploading'} className="bg-gradient-to-r from-blue-600 to-green-600">
+                        <span>
+                          <Upload className="h-4 w-4 mr-2" />
+                          {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload Resume'}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
 
-              {/* Complete Profile Details Section */}
-              <div className="border-t pt-6 mt-6">
+                  {savedResumes.length > 0 ? (
+                    <div className="space-y-3">
+                      {savedResumes.map(resume => (
+                        <div
+                          key={resume.id}
+                          className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                            selectedResumeId === resume.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => setSelectedResumeId(resume.id)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <FileText className="h-5 w-5 text-gray-600" />
+                                <p className="font-medium">{resume.name}</p>
+                                {resume.is_default && (
+                                  <Badge variant="secondary" className="text-xs">Default</Badge>
+                                )}
+                                {selectedResumeId === resume.id && (
+                                  <CheckCircle className="h-4 w-4 text-blue-600" />
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-500 mt-1">
+                                {resume.size} • Uploaded {resume.uploaded_at}
+                              </p>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setDefaultResume(resume.id)
+                                }}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  deleteResume(resume.id)
+                                }}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                      <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2">No resumes uploaded yet</p>
+                      <p className="text-sm text-gray-500">Upload your resume to get started</p>
+                    </div>
+                  )}
+
+                  {savedResumes.length > 0 && (
+                    <p className="text-sm text-gray-500 mt-4 text-center">
+                      💡 Selected resume will be used when applying for jobs
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Video Profile Tab */}
+            {activeTab === 'video' && (
+              <div className="space-y-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Complete Profile Details</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <Video className="h-5 w-5 text-green-600" />
+                      Video Profile Library
+                    </h2>
                     <p className="text-sm text-gray-600 mt-1">
-                      Add comprehensive information to improve your job matches
+                      Record and manage your video introductions
                     </p>
                   </div>
                   <Button
-                    onClick={() => setShowDetailsForm(!showDetailsForm)}
+                    onClick={() => setShowVideoStudio(true)}
                     className="bg-gradient-to-r from-blue-600 to-green-600"
                   >
-                    {showDetailsForm ? 'Hide Form' : 'Complete Profile'}
+                    <Video className="h-4 w-4 mr-2" />
+                    Record New Video
                   </Button>
                 </div>
 
-                {showDetailsForm && (
-                  <div className="mt-6">
-                    <ProfileDetailsForm
-                      initialData={profileDetails}
-                      onSave={handleSaveProfileDetails}
-                      onCancel={() => setShowDetailsForm(false)}
-                    />
+                {savedVideos.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {savedVideos.map(video => (
+                      <div
+                        key={video.id}
+                        className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                          selectedVideoId === video.id
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        onClick={() => setSelectedVideoId(video.id)}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Video className="h-5 w-5 text-gray-600" />
+                              <p className="font-medium">{video.title}</p>
+                              {video.is_default && (
+                                <Badge variant="secondary" className="text-xs">Default</Badge>
+                              )}
+                              {selectedVideoId === video.id && (
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              )}
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-sm text-gray-600">
+                                Duration: {formatDuration(video.duration)}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                AI Score: <span className="font-semibold text-green-600">{video.ai_score}/100</span>
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Uploaded {video.uploaded_at}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 pt-3 border-t border-gray-200">
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setShowVideoPlayer(true)
+                            }}
+                            className="flex-1"
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            Play
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              deleteVideo(video.id)
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                    <Video className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">No video profiles yet</p>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Record a video introduction to stand out to recruiters
+                    </p>
+                    <Button
+                      onClick={() => setShowVideoStudio(true)}
+                      className="bg-gradient-to-r from-blue-600 to-green-600"
+                    >
+                      <Video className="h-4 w-4 mr-2" />
+                      Record Your First Video
+                    </Button>
                   </div>
                 )}
 
-                {!showDetailsForm && profileDetails && (
-                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm text-green-800 flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" />
-                      Profile details completed! Click "Complete Profile" to edit.
-                    </p>
-                  </div>
+                {savedVideos.length > 0 && (
+                  <p className="text-sm text-gray-500 mt-4 text-center">
+                    💡 Selected video will be shared with recruiters when you apply
+                  </p>
                 )}
               </div>
-            </div>
+            )}
+
+            {/* Comprehensive Profile Tab */}
+            {activeTab === 'comprehensive' && (
+              <div className="space-y-6">
+                <div className="mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Complete Your Profile</h2>
+                  <p className="text-gray-600">
+                    Add comprehensive information to improve your job matches and increase visibility to recruiters
+                  </p>
+                </div>
+
+                <ProfileDetailsForm
+                  initialData={profileDetails}
+                  onSave={handleSaveProfileDetails}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
