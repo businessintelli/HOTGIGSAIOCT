@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { 
   User, Briefcase, GraduationCap, Shield, Phone, Mail, 
-  MapPin, Calendar, Globe, Building, FileText, CheckCircle, AlertCircle
+  MapPin, Calendar, Globe, Building, FileText, CheckCircle, AlertCircle, DollarSign
 } from 'lucide-react'
 
 const WORK_AUTHORIZATION_OPTIONS = [

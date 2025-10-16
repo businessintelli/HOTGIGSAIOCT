@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import VideoRecordingStudio from '../components/VideoRecordingStudio'
 import VideoProfilePlayer from '../components/VideoProfilePlayer'
+import ProfileDetailsForm from '../components/ProfileDetailsForm'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../lib/api'
 
@@ -23,6 +24,8 @@ export default function Profile() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [showVideoStudio, setShowVideoStudio] = useState(false)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
+  const [showDetailsForm, setShowDetailsForm] = useState(false)
+  const [profileDetails, setProfileDetails] = useState(null)
   
   // Documents state
   const [savedResumes, setSavedResumes] = useState([])
@@ -80,6 +83,23 @@ export default function Profile() {
   const handleSave = () => {
     console.log('Saving profile:', formData)
     setIsEditing(false)
+  }
+
+  const handleSaveProfileDetails = async (detailsData) => {
+    try {
+      // TODO: Save to API
+      console.log('Saving profile details:', detailsData)
+      setProfileDetails(detailsData)
+      setShowDetailsForm(false)
+      setUploadStatus('success')
+      setUploadMessage('Profile details saved successfully!')
+      setTimeout(() => setUploadStatus(null), 5000)
+    } catch (error) {
+      console.error('Error saving profile details:', error)
+      setUploadStatus('error')
+      setUploadMessage('Failed to save profile details')
+      setTimeout(() => setUploadStatus(null), 5000)
+    }
   }
 
   const handleResumeUpload = async (e) => {
@@ -577,6 +597,43 @@ export default function Profile() {
                 <p className="text-sm text-gray-500 mt-4 text-center">
                   💡 Selected documents will be used when applying for jobs
                 </p>
+              </div>
+
+              {/* Complete Profile Details Section */}
+              <div className="border-t pt-6 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">Complete Profile Details</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Add comprehensive information to improve your job matches
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setShowDetailsForm(!showDetailsForm)}
+                    className="bg-gradient-to-r from-blue-600 to-green-600"
+                  >
+                    {showDetailsForm ? 'Hide Form' : 'Complete Profile'}
+                  </Button>
+                </div>
+
+                {showDetailsForm && (
+                  <div className="mt-6">
+                    <ProfileDetailsForm
+                      initialData={profileDetails}
+                      onSave={handleSaveProfileDetails}
+                      onCancel={() => setShowDetailsForm(false)}
+                    />
+                  </div>
+                )}
+
+                {!showDetailsForm && profileDetails && (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-800 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      Profile details completed! Click "Complete Profile" to edit.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
