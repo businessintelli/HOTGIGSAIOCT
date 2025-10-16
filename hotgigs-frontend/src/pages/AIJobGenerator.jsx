@@ -8,6 +8,7 @@ import {
   Briefcase, MapPin, DollarSign, Users, Clock, Building
 } from 'lucide-react'
 import api from '../lib/api'
+import { localJobsService } from '../lib/localJobsService'
 
 export default function AIJobGenerator() {
   const navigate = useNavigate()
@@ -129,9 +130,19 @@ export default function AIJobGenerator() {
     setError('')
     
     try {
-      // TODO: Call actual API
-      console.log('Posting job:', generatedJob)
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Use local storage for demo
+      const jobData = {
+        ...generatedJob,
+        responsibilities: generatedJob.responsibilities,
+        qualifications: generatedJob.qualifications,
+        skills: generatedJob.skills,
+        screeningQuestions: generatedJob.screeningQuestions
+      }
+      
+      const createdJob = localJobsService.createJob(jobData)
+      console.log('Job created:', createdJob)
+      
+      await new Promise(resolve => setTimeout(resolve, 500))
       setStep(4)
     } catch (err) {
       console.error('Error posting job:', err)

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import OrionChat from '../components/OrionChat'
 import { useAuth } from '../contexts/AuthContext'
+import { localJobsService } from '../lib/localJobsService'
 
 // Application status configuration
 const APPLICATION_STATUSES = {
@@ -33,6 +34,13 @@ export default function CompanyDashboard() {
   const [activeTab, setActiveTab] = useState('overview') // overview, applications, jobs, analytics
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [jobs, setJobs] = useState([])
+  
+  // Initialize sample data and load jobs
+  useEffect(() => {
+    localJobsService.initializeSampleData()
+    setJobs(localJobsService.getAllJobs())
+  }, [])
 
   const handleLogout = () => {
     logout()
