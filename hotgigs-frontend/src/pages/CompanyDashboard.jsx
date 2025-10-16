@@ -35,12 +35,18 @@ export default function CompanyDashboard() {
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [jobs, setJobs] = useState([])
+  const [jobsFilter, setJobsFilter] = useState('all') // 'all' or 'my'
   
   // Initialize sample data and load jobs
   useEffect(() => {
     localJobsService.initializeSampleData()
     setJobs(localJobsService.getAllJobs())
   }, [])
+  
+  // Filter jobs based on selection
+  const filteredJobs = jobsFilter === 'my' 
+    ? jobs.filter(job => job.posted_by === user?.id)
+    : jobs
 
   const handleLogout = () => {
     logout()
@@ -574,14 +580,32 @@ export default function CompanyDashboard() {
           {activeTab === 'jobs' && (
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">My Job Postings</h2>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">Job Postings</h2>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant={jobsFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setJobsFilter('all')}
+                    >
+                      All Jobs ({jobs.length})
+                    </Button>
+                    <Button 
+                      variant={jobsFilter === 'my' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setJobsFilter('my')}
+                    >
+                      My Jobs ({jobs.filter(j => j.posted_by === user?.id).length})
+                    </Button>
+                  </div>
+                </div>
                 <Button onClick={() => navigate('/create-job')} className="bg-gradient-to-r from-blue-600 to-green-600">
                   <Plus className="h-4 w-4 mr-2" />
                   Post New Job
                 </Button>
               </div>
 
-              {jobs.length === 0 ? (
+              {filteredJobs.length === 0 ? (
                 <div className="text-center py-12">
                   <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No jobs posted yet</h3>
@@ -593,7 +617,7 @@ export default function CompanyDashboard() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {jobs.map(job => (
+                  {filteredJobs.map(job => (
                     <div key={job.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-white">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">

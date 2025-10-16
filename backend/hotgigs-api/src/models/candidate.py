@@ -145,7 +145,7 @@ class CandidateProfile(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    user = relationship("User", back_populates="candidate_profile")
+    user = relationship("User")
     skills = relationship("CandidateSkill", back_populates="candidate", cascade="all, delete-orphan")
     experiences = relationship("WorkExperience", back_populates="candidate", cascade="all, delete-orphan")
     educations = relationship("Education", back_populates="candidate", cascade="all, delete-orphan")

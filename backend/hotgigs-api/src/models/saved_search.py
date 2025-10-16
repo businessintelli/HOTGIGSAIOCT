@@ -41,7 +41,7 @@ class SavedSearch(Base):
     last_used = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
-    user = relationship("User", back_populates="saved_searches")
+    user = relationship("User")
     
     def to_dict(self):
         """Convert to dictionary"""

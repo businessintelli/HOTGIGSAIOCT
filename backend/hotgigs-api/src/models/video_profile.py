@@ -4,6 +4,7 @@ Handles candidate video introductions, AI analysis, and smart indexing
 """
 
 from sqlalchemy import Column, String, Integer, Float, Boolean, Text, DateTime, ForeignKey, JSON, Enum
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -29,7 +30,7 @@ class VideoProfile(Base):
     __tablename__ = "video_profiles"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    candidate_id = Column(String, ForeignKey("candidates.id"), nullable=False)
+    candidate_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     
     # Video metadata
     title = Column(String(255), nullable=False)
@@ -81,7 +82,7 @@ class VideoChapter(Base):
     __tablename__ = "video_chapters"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    video_profile_id = Column(String, ForeignKey("video_profiles.id"), nullable=False)
+    video_profile_id = Column(String, ForeignKey("video_profiles.id"), nullable=False)  # String because video_profiles.id is String
     
     title = Column(String(255), nullable=False)
     description = Column(Text)
@@ -108,7 +109,7 @@ class VideoHighlight(Base):
     __tablename__ = "video_highlights"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    video_profile_id = Column(String, ForeignKey("video_profiles.id"), nullable=False)
+    video_profile_id = Column(String, ForeignKey("video_profiles.id"), nullable=False)  # String because video_profiles.id is String
     
     title = Column(String(255), nullable=False)
     description = Column(Text)
@@ -139,7 +140,7 @@ class VideoAnalytics(Base):
     __tablename__ = "video_analytics"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    video_profile_id = Column(String, ForeignKey("video_profiles.id"), nullable=False)
+    video_profile_id = Column(String, ForeignKey("video_profiles.id"), nullable=False)  # String because video_profiles.id is String
     
     # View statistics
     total_views = Column(Integer, default=0)
@@ -173,7 +174,7 @@ class VideoFeedback(Base):
     __tablename__ = "video_feedback"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    video_profile_id = Column(String, ForeignKey("video_profiles.id"), nullable=False)
+    video_profile_id = Column(String, ForeignKey("video_profiles.id"), nullable=False)  # String because video_profiles.id is String
     
     # Feedback categories
     communication_feedback = Column(JSON)  # Speaking pace, clarity, filler words
@@ -205,7 +206,7 @@ class VideoRecordingSession(Base):
     __tablename__ = "video_recording_sessions"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    candidate_id = Column(String, ForeignKey("candidates.id"), nullable=False)
+    candidate_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     
     # Session metadata
     session_type = Column(String(50))  # practice, final, retake
@@ -219,7 +220,7 @@ class VideoRecordingSession(Base):
     
     # Session outcome
     was_submitted = Column(Boolean, default=False)
-    video_profile_id = Column(String, ForeignKey("video_profiles.id"))
+    video_profile_id = Column(String, ForeignKey("video_profiles.id"))  # String because video_profiles.id is String
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -237,8 +238,8 @@ class VideoComparison(Base):
     __tablename__ = "video_comparisons"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    recruiter_id = Column(String, ForeignKey("users.id"), nullable=False)
-    job_id = Column(String, ForeignKey("jobs.id"))
+    recruiter_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    job_id = Column(UUID(as_uuid=True), ForeignKey("jobs.id"))
     
     # Comparison data
     video_profile_ids = Column(JSON)  # List of video IDs being compared
