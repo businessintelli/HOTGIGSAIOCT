@@ -1,28 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:14-alpine
-    container_name: hotgigs-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: hotgigs_db
-      POSTGRES_USER: hotgigs_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hotgigs_secure_password_2024}
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - hotgigs-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hotgigs_user -d hotgigs_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # Backend API
   backend:
     build:
@@ -31,30 +9,41 @@ services:
     container_name: hotgigs-backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://hotgigs_user:${POSTGRES_PASSWORD:-hotgigs_secure_password_2024}@postgres:5432/hotgigs_db
-      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production-min-32-chars}
+      # Supabase PostgreSQL Connection
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:h-6B2wH8PSi4Rtn@db.rhzetgynouwyegixzshj.supabase.co:5432/postgres}
+      
+      # Supabase Configuration
+      SUPABASE_URL: ${SUPABASE_URL:-https://rhzetgynouwyegixzshj.supabase.co}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoemV0Z3lub3V3eWVnaXh6c2hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNDU0MDEsImV4cCI6MjA3MTgyMTQwMX0.gOE1EgnQUeZfV2Shf2XWamdrUrSjIHoIaccqfFHhKf0}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY:-}
+      
+      # JWT Configuration
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production-min-32-chars-long-for-security}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
-      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://frontend:80
+      
+      # CORS Configuration
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://frontend:80,https://*.manusvm.computer
+      
+      # OpenAI API (for AI features)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      
+      # Application Settings
+      PYTHONUNBUFFERED: 1
+      PYTHONPATH: /app/src
+      
     ports:
       - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - hotgigs-network
     volumes:
       - ./backend/hotgigs-api/uploads:/app/uploads
-    command: >
-      sh -c "
-        echo 'Waiting for database...' &&
-        sleep 5 &&
-        echo 'Initializing database...' &&
-        python src/db/init_db.py &&
-        echo 'Starting API server...' &&
-        python src/main.py
-      "
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Frontend Application
   frontend:
@@ -66,17 +55,24 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - hotgigs-network
     environment:
-      VITE_API_URL: http://localhost:8000
+      # API Configuration
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+      VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8000/ws}
+      
+      # Supabase Configuration (for frontend direct access if needed)
+      VITE_SUPABASE_URL: ${SUPABASE_URL:-https://rhzetgynouwyegixzshj.supabase.co}
+      VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoemV0Z3lub3V3eWVnaXh6c2hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNDU0MDEsImV4cCI6MjA3MTgyMTQwMX0.gOE1EgnQUeZfV2Shf2XWamdrUrSjIHoIaccqfFHhKf0}
 
 networks:
   hotgigs-network:
     driver: bridge
 
 volumes:
-  postgres_data:
+  uploads:
     driver: local
 
