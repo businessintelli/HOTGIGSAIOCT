@@ -22,7 +22,7 @@ export default function HomePage() {
             <div className="hidden md:flex items-center space-x-8">
               <Link to="/" className="text-gray-700 hover:text-blue-600 transition-colors">Home</Link>
               <Link to="/jobs" className="text-gray-700 hover:text-blue-600 transition-colors">Jobs</Link>
-              <Link to="/company" className="text-gray-700 hover:text-blue-600 transition-colors">For Employers</Link>
+              <Link to="/signin" className="text-gray-700 hover:text-blue-600 transition-colors">For Employers</Link>
               <Link to="#" className="text-gray-700 hover:text-blue-600 transition-colors">About Us</Link>
               <Link to="#" className="text-gray-700 hover:text-blue-600 transition-colors">Contact</Link>
             </div>
