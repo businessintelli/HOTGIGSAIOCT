@@ -32,7 +32,7 @@ class EmailActivity(BaseModel):
     opened_at: Optional[str] = None
     clicked_at: Optional[str] = None
 
-class EmailTemplate Stats(BaseModel):
+class EmailTemplateStats(BaseModel):
     template_name: str
     sent_count: int
     open_rate: float
