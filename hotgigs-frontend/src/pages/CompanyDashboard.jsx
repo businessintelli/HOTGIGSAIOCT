@@ -570,10 +570,104 @@ export default function CompanyDashboard() {
             </div>
           )}
 
-          {/* Jobs Tab - Placeholder */}
+          {/* Jobs Tab */}
           {activeTab === 'jobs' && (
             <div className="p-6">
-              <p className="text-gray-600">Jobs management coming soon...</p>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">My Job Postings</h2>
+                <Button onClick={() => navigate('/create-job')} className="bg-gradient-to-r from-blue-600 to-green-600">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Post New Job
+                </Button>
+              </div>
+
+              {jobs.length === 0 ? (
+                <div className="text-center py-12">
+                  <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No jobs posted yet</h3>
+                  <p className="text-gray-600 mb-6">Create your first job posting to start receiving applications</p>
+                  <Button onClick={() => navigate('/create-job')} className="bg-gradient-to-r from-blue-600 to-green-600">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Post Your First Job
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {jobs.map(job => (
+                    <div key={job.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-white">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-xl font-bold text-gray-900">{job.title}</h3>
+                            <Badge className={job.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                              {job.status === 'active' ? '✓ Active' : 'Draft'}
+                            </Badge>
+                          </div>
+                          <p className="text-gray-600 mb-2">{job.company}</p>
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {job.location}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Briefcase className="h-4 w-4" />
+                              {job.workModel?.charAt(0).toUpperCase() + job.workModel?.slice(1) || 'N/A'}
+                            </span>
+                            {job.salaryMin && job.salaryMax && (
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="h-4 w-4" />
+                                ${(job.salaryMin / 1000).toFixed(0)}k - ${(job.salaryMax / 1000).toFixed(0)}k
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="relative">
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Job Stats */}
+                      <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg mb-4">
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-gray-900">{job.applications_count || 0}</p>
+                          <p className="text-xs text-gray-600">Applications</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-gray-900">{job.views || 0}</p>
+                          <p className="text-xs text-gray-600">Views</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-gray-900">
+                            {Math.floor((Date.now() - new Date(job.created_at).getTime()) / (1000 * 60 * 60 * 24))}
+                          </p>
+                          <p className="text-xs text-gray-600">Days Active</p>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/jobs/${job.id}/applications`)}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          View Applications ({job.applications_count || 0})
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Job
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                          Close Job
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
