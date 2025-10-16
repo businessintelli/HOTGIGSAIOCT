@@ -30,7 +30,17 @@ export default function SignIn() {
     } catch (err) {
       console.error('Login error:', err)
       setError(err.message || 'Failed to sign in. Please check your credentials.')
-      // For demo purposes, route based on email
+      
+      // For demo purposes, create a mock session
+      const mockUser = {
+        email: email,
+        full_name: email.includes('company') ? 'Company User' : 'Test User',
+        role: email.includes('company') ? 'company' : 'candidate'
+      }
+      localStorage.setItem('user', JSON.stringify(mockUser))
+      localStorage.setItem('access_token', 'demo_token_' + Date.now())
+      
+      // Route based on email
       if (email.includes('company')) {
         navigate('/company-dashboard')
       } else {

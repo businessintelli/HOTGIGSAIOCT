@@ -197,7 +197,7 @@ export default function CompanyDashboard() {
             </Link>
             
             <div className="flex items-center space-x-4">
-              <Button onClick={() => navigate('/post-job')} className="bg-gradient-to-r from-blue-600 to-green-600">
+              <Button onClick={() => navigate('/create-job')} className="bg-gradient-to-r from-blue-600 to-green-600">
                 <Plus className="h-4 w-4 mr-2" />
                 Post New Job
               </Button>

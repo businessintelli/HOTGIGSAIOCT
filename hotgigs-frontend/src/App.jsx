@@ -11,6 +11,7 @@ import Settings from './pages/Settings'
 import Connections from './pages/Connections'
 import CompanyDashboard from './pages/CompanyDashboard'
 import PostJob from './pages/PostJob'
+import JobCreationChoice from './pages/JobCreationChoice'
 import AIFeatures from './pages/AIFeatures'
 import JobApplications from './pages/JobApplications'
 import { AuthProvider } from './contexts/AuthContext'
@@ -30,6 +31,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/connections" element={<Connections />} />
           <Route path="/company" element={<CompanyDashboard />} />
+          <Route path="/create-job" element={<JobCreationChoice />} />
           <Route path="/post-job" element={<PostJob />} />
           <Route path="/company-dashboard" element={<CompanyDashboard />} />
           <Route path="/ai-features" element={<AIFeatures />} />
