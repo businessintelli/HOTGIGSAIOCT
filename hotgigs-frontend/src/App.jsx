@@ -17,6 +17,14 @@ import AIFeatures from './pages/AIFeatures'
 import JobApplications from './pages/JobApplications'
 import JobDetail from './pages/JobDetailEnhanced'
 import CompanyProfile from './pages/CompanyProfile'
+import AboutUs from './pages/AboutUs'
+import Contact from './pages/Contact'
+import Features from './pages/Features'
+import Pricing from './pages/Pricing'
+import AIAgent from './pages/AIAgent'
+import Blog from './pages/Blog'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
 import { AuthProvider } from './contexts/AuthContext'
 
 function App() {
@@ -42,6 +50,14 @@ function App() {
           <Route path="/jobs/:jobId/applications" element={<JobApplications />} />
           <Route path="/job/:jobId" element={<JobDetail />} />
           <Route path="/company-profile" element={<CompanyProfile />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/ai-agent" element={<AIAgent />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
         </Routes>
       </Router>
     </AuthProvider>
