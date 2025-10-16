@@ -20,18 +20,7 @@ export default function SignIn() {
     setLoading(true)
 
     try {
-      const response = await login({ email, password })
-      // Route based on user role
-      if (response?.user?.role === 'company' || response?.user?.role === 'recruiter') {
-        navigate('/company-dashboard')
-      } else {
-        navigate('/dashboard')
-      }
-    } catch (err) {
-      console.error('Login error:', err)
-      setError(err.message || 'Failed to sign in. Please check your credentials.')
-      
-      // For demo purposes, create a mock session
+      // Demo mode - skip API call and use local authentication
       const mockUser = {
         email: email,
         full_name: email.includes('company') ? 'Company User' : 'Test User',
@@ -40,12 +29,18 @@ export default function SignIn() {
       localStorage.setItem('user', JSON.stringify(mockUser))
       localStorage.setItem('access_token', 'demo_token_' + Date.now())
       
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
       // Route based on email
       if (email.includes('company')) {
         navigate('/company-dashboard')
       } else {
         navigate('/dashboard')
       }
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('Failed to sign in. Please try again.')
     } finally {
       setLoading(false)
     }
