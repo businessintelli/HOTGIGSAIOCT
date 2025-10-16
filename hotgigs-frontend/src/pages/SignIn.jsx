@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -8,7 +8,11 @@ import { useAuth } from '../contexts/AuthContext'
 
 export default function SignIn() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login, socialLogin } = useAuth()
+  
+  // Get redirect URL from navigation state (passed from Jobs page)
+  const from = location.state?.from || null
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -32,8 +36,11 @@ export default function SignIn() {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      // Route based on email
-      if (email.includes('company')) {
+      // Route based on redirect URL or email
+      if (from) {
+        // Redirect to the page user was trying to access
+        navigate(from)
+      } else if (email.includes('company')) {
         navigate('/company-dashboard')
       } else {
         navigate('/dashboard')
@@ -51,16 +58,25 @@ export default function SignIn() {
     setLoading(true)
 
     try {
-      // For demo purposes, navigate to dashboard
+      // For demo purposes, navigate to redirect URL or dashboard
       console.log(`Logging in with ${provider}`)
       // In production, this would call the social login API
       // await socialLogin(provider, token)
-      navigate('/dashboard')
+      
+      if (from) {
+        navigate(from)
+      } else {
+        navigate('/dashboard')
+      }
     } catch (err) {
       console.error('Social login error:', err)
       setError(err.message || `Failed to sign in with ${provider}`)
-      // For demo purposes, still navigate to dashboard
-      navigate('/dashboard')
+      // For demo purposes, still navigate to redirect URL or dashboard
+      if (from) {
+        navigate(from)
+      } else {
+        navigate('/dashboard')
+      }
     } finally {
       setLoading(false)
     }
