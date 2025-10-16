@@ -20,13 +20,22 @@ export default function SignIn() {
     setLoading(true)
 
     try {
-      await login({ email, password })
-      navigate('/dashboard')
+      const response = await login({ email, password })
+      // Route based on user role
+      if (response?.user?.role === 'company' || response?.user?.role === 'recruiter') {
+        navigate('/company-dashboard')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (err) {
       console.error('Login error:', err)
       setError(err.message || 'Failed to sign in. Please check your credentials.')
-      // For demo purposes, still navigate to dashboard
-      navigate('/dashboard')
+      // For demo purposes, route based on email
+      if (email.includes('company')) {
+        navigate('/company-dashboard')
+      } else {
+        navigate('/dashboard')
+      }
     } finally {
       setLoading(false)
     }
