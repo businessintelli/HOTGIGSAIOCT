@@ -6,7 +6,9 @@ import {
   Mail, Trash2, CheckSquare, Square, ChevronDown, SlidersHorizontal
 } from 'lucide-react'
 import KanbanBoard from '../components/KanbanBoard'
+import JobAnalytics from '../components/JobAnalytics'
 import { localJobsService } from '../lib/localJobsService'
+import { getJobAnalytics } from '../lib/jobAnalyticsService'
 import api from '../lib/apiService'
 
 const JobDetailEnhanced = () => {
@@ -19,6 +21,7 @@ const JobDetailEnhanced = () => {
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
   const [apiAvailable, setApiAvailable] = useState(false)
+  const [jobAnalytics, setJobAnalytics] = useState(null)
   
   // Bulk actions state
   const [selectedApplications, setSelectedApplications] = useState([])
@@ -919,10 +922,7 @@ const JobDetailEnhanced = () => {
         
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Job Analytics</h2>
-            <p className="text-gray-600">Analytics dashboard coming soon...</p>
-          </div>
+          <JobAnalytics analytics={jobAnalytics || getJobAnalytics(jobId)} jobTitle={job?.title || 'Job Analytics'} />
         )}
       </div>
     </div>
