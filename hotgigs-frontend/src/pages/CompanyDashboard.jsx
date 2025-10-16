@@ -6,11 +6,20 @@ import {
   Sparkles, Plus, Users, Briefcase, Eye, Mail, MessageSquare,
   ChevronDown, User, Settings, LogOut, Calendar, Clock, DollarSign,
   MapPin, TrendingUp, Filter, Search, MoreVertical, CheckCircle,
-  XCircle, AlertCircle, Send, UserCheck, UserX, ArrowRight
+  XCircle, AlertCircle, Send, UserCheck, UserX, ArrowRight, Edit,
+  Trash2, Download, X, SlidersHorizontal, ArrowUpDown
 } from 'lucide-react'
 import OrionChat from '../components/OrionChat'
 import { useAuth } from '../contexts/AuthContext'
 import { localJobsService } from '../lib/localJobsService'
+import { getDashboardAnalytics } from '../lib/analyticsService'
+import MetricsCards from '../components/analytics/MetricsCards'
+import ApplicationFunnelChart from '../components/analytics/ApplicationFunnelChart'
+import PipelineChart from '../components/analytics/PipelineChart'
+import ApplicationsTimeSeriesChart from '../components/analytics/ApplicationsTimeSeriesChart'
+import SourceEffectivenessChart from '../components/analytics/SourceEffectivenessChart'
+import TimeToHireChart from '../components/analytics/TimeToHireChart'
+import TopSkillsChart from '../components/analytics/TopSkillsChart'
 
 // Application status configuration
 const APPLICATION_STATUSES = {
@@ -36,11 +45,24 @@ export default function CompanyDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [jobs, setJobs] = useState([])
   const [jobsFilter, setJobsFilter] = useState('all') // 'all' or 'my'
+  const [analyticsData, setAnalyticsData] = useState(null)
+  const [selectedApplications, setSelectedApplications] = useState([])
+  const [showBulkActions, setShowBulkActions] = useState(false)
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [sortBy, setSortBy] = useState('date') // date, match, name
+  const [advancedFilters, setAdvancedFilters] = useState({
+    minMatch: 0,
+    maxMatch: 100,
+    experienceLevel: 'all',
+    workModel: 'all',
+    availability: 'all'
+  })
   
   // Initialize sample data and load jobs
   useEffect(() => {
     localJobsService.initializeSampleData()
     setJobs(localJobsService.getAllJobs())
+    setAnalyticsData(getDashboardAnalytics())
   }, [])
   
   // Filter jobs based on selection
@@ -172,13 +194,30 @@ export default function CompanyDashboard() {
     }
   ]
 
-  const filteredApplications = applications.filter(app => {
-    const matchesStatus = selectedStatus === 'all' || app.status === selectedStatus
-    const matchesSearch = searchQuery === '' || 
-      app.candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.job.title.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesStatus && matchesSearch
-  })
+  const filteredApplications = applications
+    .filter(app => {
+      const matchesStatus = selectedStatus === 'all' || app.status === selectedStatus
+      const matchesSearch = searchQuery === '' || 
+        app.candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.job.title.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      // Advanced filters
+      const matchesSkillRange = app.skillMatch >= advancedFilters.minMatch && app.skillMatch <= advancedFilters.maxMatch
+      const matchesWorkModel = advancedFilters.workModel === 'all' || app.workModel.toLowerCase() === advancedFilters.workModel.toLowerCase()
+      
+      return matchesStatus && matchesSearch && matchesSkillRange && matchesWorkModel
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'match':
+          return b.skillMatch - a.skillMatch
+        case 'name':
+          return a.candidate.name.localeCompare(b.candidate.name)
+        case 'date':
+        default:
+          return new Date(b.appliedDate) - new Date(a.appliedDate)
+      }
+    })
 
   const getStatusConfig = (status) => APPLICATION_STATUSES[status] || APPLICATION_STATUSES.submitted
 
@@ -186,6 +225,44 @@ export default function CompanyDashboard() {
     console.log(`Updating application ${appId} to status: ${newStatus}`)
     // TODO: API call to update status
   }
+
+  // Bulk action handlers
+  const handleSelectAll = () => {
+    if (selectedApplications.length === filteredApplications.length) {
+      setSelectedApplications([])
+    } else {
+      setSelectedApplications(filteredApplications.map(app => app.id))
+    }
+  }
+
+  const handleSelectApplication = (appId) => {
+    if (selectedApplications.includes(appId)) {
+      setSelectedApplications(selectedApplications.filter(id => id !== appId))
+    } else {
+      setSelectedApplications([...selectedApplications, appId])
+    }
+  }
+
+  const handleBulkStatusUpdate = (newStatus) => {
+    console.log(`Bulk updating ${selectedApplications.length} applications to ${newStatus}`)
+    // TODO: API call to bulk update
+    setSelectedApplications([])
+  }
+
+  const handleBulkReject = () => {
+    console.log(`Bulk rejecting ${selectedApplications.length} applications`)
+    // TODO: API call to bulk reject
+    setSelectedApplications([])
+  }
+
+  const handleBulkEmail = () => {
+    console.log(`Sending email to ${selectedApplications.length} candidates`)
+    // TODO: Open email composer
+  }
+
+  useEffect(() => {
+    setShowBulkActions(selectedApplications.length > 0)
+  }, [selectedApplications])
 
   const statusCounts = {
     all: applications.length,
@@ -334,7 +411,7 @@ export default function CompanyDashboard() {
               {[
                 { id: 'overview', label: 'Overview', count: null },
                 { id: 'applications', label: 'Applications', count: stats.totalApplications },
-                { id: 'jobs', label: 'My Jobs', count: stats.activeJobs },
+                { id: 'jobs', label: 'Hot Jobs', count: stats.activeJobs },
                 { id: 'analytics', label: 'Analytics', count: null }
               ].map(tab => (
                 <button
@@ -360,6 +437,39 @@ export default function CompanyDashboard() {
           {/* Applications Tab Content */}
           {activeTab === 'applications' && (
             <div className="p-6">
+              {/* Bulk Actions Bar */}
+              {showBulkActions && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">
+                      {selectedApplications.length} candidate{selectedApplications.length > 1 ? 's' : ''} selected
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleBulkStatusUpdate('in_review')}>
+                      <Eye className="h-4 w-4 mr-1" />
+                      Move to Review
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleBulkStatusUpdate('interview_scheduled')}>
+                      <Calendar className="h-4 w-4 mr-1" />
+                      Schedule Interview
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleBulkEmail}>
+                      <Mail className="h-4 w-4 mr-1" />
+                      Send Email
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleBulkReject} className="text-red-600 hover:text-red-700">
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Reject
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setSelectedApplications([])}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Filters and Search */}
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <div className="flex-1 relative">
@@ -412,6 +522,106 @@ export default function CompanyDashboard() {
                 </div>
               </div>
 
+              {/* Advanced Filters and Sorting */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  >
+                    <SlidersHorizontal className="h-4 w-4 mr-1" />
+                    Advanced Filters
+                  </Button>
+                  <div className="flex items-center gap-2 ml-4">
+                    <ArrowUpDown className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-600">Sort by:</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="date">Date Applied</option>
+                      <option value="match">Skill Match</option>
+                      <option value="name">Name</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedApplications.length === filteredApplications.length && filteredApplications.length > 0}
+                    onChange={handleSelectAll}
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-600">Select All</span>
+                </div>
+              </div>
+
+              {/* Advanced Filters Panel */}
+              {showAdvancedFilters && (
+                <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Skill Match Range
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={advancedFilters.minMatch}
+                          onChange={(e) => setAdvancedFilters({...advancedFilters, minMatch: parseInt(e.target.value)})}
+                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                        />
+                        <span className="text-gray-500">to</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={advancedFilters.maxMatch}
+                          onChange={(e) => setAdvancedFilters({...advancedFilters, maxMatch: parseInt(e.target.value)})}
+                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                        />
+                        <span className="text-gray-500">%</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Work Model
+                      </label>
+                      <select
+                        value={advancedFilters.workModel}
+                        onChange={(e) => setAdvancedFilters({...advancedFilters, workModel: e.target.value})}
+                        className="w-full px-3 py-1 border border-gray-300 rounded text-sm"
+                      >
+                        <option value="all">All Models</option>
+                        <option value="remote">Remote</option>
+                        <option value="hybrid">Hybrid</option>
+                        <option value="onsite">Onsite</option>
+                      </select>
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setAdvancedFilters({
+                          minMatch: 0,
+                          maxMatch: 100,
+                          experienceLevel: 'all',
+                          workModel: 'all',
+                          availability: 'all'
+                        })}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Clear Filters
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Applications List */}
               <div className="space-y-4">
                 {filteredApplications.map(application => {
@@ -421,10 +631,23 @@ export default function CompanyDashboard() {
                   return (
                     <div
                       key={application.id}
-                      className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-white"
+                      className={`border rounded-lg p-6 hover:shadow-md transition-shadow bg-white ${
+                        selectedApplications.includes(application.id) 
+                          ? 'border-blue-500 ring-2 ring-blue-100' 
+                          : 'border-gray-200'
+                      }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex gap-4 flex-1">
+                          {/* Checkbox */}
+                          <div className="flex items-start pt-1">
+                            <input
+                              type="checkbox"
+                              checked={selectedApplications.includes(application.id)}
+                              onChange={() => handleSelectApplication(application.id)}
+                              className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                            />
+                          </div>
                           {/* Avatar */}
                           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                             {application.candidate.name.split(' ').map(n => n[0]).join('')}
@@ -672,10 +895,9 @@ export default function CompanyDashboard() {
 
                       {/* Actions */}
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
                           size="sm"
-                          onClick={() => navigate(`/jobs/${job.id}/applications`)}
+                          onClick={() => navigate(`/job/${job.id}`)}
                         >
                           <Users className="h-4 w-4 mr-2" />
                           View Applications ({job.applications_count || 0})
@@ -695,10 +917,88 @@ export default function CompanyDashboard() {
             </div>
           )}
 
-          {/* Analytics Tab - Placeholder */}
-          {activeTab === 'analytics' && (
-            <div className="p-6">
-              <p className="text-gray-600">Analytics dashboard coming soon...</p>
+          {/* Analytics Tab */}
+          {activeTab === 'analytics' && analyticsData && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h2>
+                  <p className="text-sm text-gray-600 mt-1">Comprehensive insights into your hiring performance</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Last 30 Days
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </div>
+              </div>
+
+              {/* Key Metrics Cards */}
+              <MetricsCards metrics={analyticsData.keyMetrics} />
+
+              {/* Charts Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Applications Over Time */}
+                <div className="lg:col-span-2">
+                  <ApplicationsTimeSeriesChart data={analyticsData.applicationsOverTime} />
+                </div>
+
+                {/* Application Funnel */}
+                <ApplicationFunnelChart data={analyticsData.funnelData} />
+
+                {/* Pipeline Chart */}
+                <PipelineChart data={analyticsData.pipelineData} />
+
+                {/* Source Effectiveness */}
+                <div className="lg:col-span-2">
+                  <SourceEffectivenessChart data={analyticsData.sourceData} />
+                </div>
+
+                {/* Time to Hire */}
+                <TimeToHireChart data={analyticsData.timeToHireData} />
+
+                {/* Top Skills */}
+                <TopSkillsChart data={analyticsData.topSkills} />
+              </div>
+
+              {/* Job Performance Table */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Job Performance</h3>
+                  <p className="text-sm text-gray-600 mt-1">Detailed metrics for each job posting</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Job Title</th>
+                        <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Views</th>
+                        <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Applications</th>
+                        <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Conversion</th>
+                        <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Avg Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analyticsData.jobPerformanceData.map((job, index) => (
+                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 text-sm text-gray-900">{job.jobTitle}</td>
+                          <td className="py-3 px-4 text-sm text-gray-600 text-right">{job.views}</td>
+                          <td className="py-3 px-4 text-sm text-gray-600 text-right">{job.applications}</td>
+                          <td className="py-3 px-4 text-sm text-right">
+                            <Badge className="bg-green-100 text-green-800">{job.conversionRate}%</Badge>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-600 text-right">{job.avgTimeToApply} days</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
         </div>

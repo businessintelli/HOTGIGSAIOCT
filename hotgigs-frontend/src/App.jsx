@@ -15,6 +15,7 @@ import JobCreationChoice from './pages/JobCreationChoice'
 import AIJobGenerator from './pages/AIJobGenerator'
 import AIFeatures from './pages/AIFeatures'
 import JobApplications from './pages/JobApplications'
+import JobDetail from './pages/JobDetailEnhanced'
 import { AuthProvider } from './contexts/AuthContext'
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
           <Route path="/company-dashboard" element={<CompanyDashboard />} />
           <Route path="/ai-features" element={<AIFeatures />} />
           <Route path="/jobs/:jobId/applications" element={<JobApplications />} />
+          <Route path="/job/:jobId" element={<JobDetail />} />
         </Routes>
       </Router>
     </AuthProvider>

@@ -1,5 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import OrionChat from '../components/OrionChat'
+import { localJobsService } from '../lib/localJobsService'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -17,6 +18,14 @@ export default function Dashboard() {
   const [showOrionChat, setShowOrionChat] = useState(false)
   const [minimizeOrionChat, setMinimizeOrionChat] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+  const [hotJobs, setHotJobs] = useState([])
+
+  // Load hot jobs on component mount
+  useEffect(() => {
+    localJobsService.initializeSampleData()
+    const jobs = localJobsService.getHotJobs()
+    setHotJobs(jobs)
+  }, [])
 
   // Mock data - replace with API calls
   const stats = {
@@ -298,7 +307,7 @@ export default function Dashboard() {
         {/* Tabs */}
         <div className="mb-6 border-b border-gray-200">
           <div className="flex gap-6">
-            {['overview', 'applications', 'interviews', 'invitations', 'profile_views'].map(tab => (
+            {['overview', 'hot_jobs', 'applications', 'interviews', 'invitations', 'profile_views'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -320,6 +329,104 @@ export default function Dashboard() {
           {/* Main Content Area */}
           <div className="lg:col-span-2 space-y-6">
             
+            {/* Hot Jobs Tab */}
+            {(activeTab === 'hot_jobs') && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                      <Sparkles className="h-6 w-6 text-orange-500" />
+                      Hot Jobs
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">Trending opportunities you don't want to miss</p>
+                  </div>
+                  <Button onClick={() => navigate('/jobs')} variant="outline">
+                    View All Jobs
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  {hotJobs.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-600">No hot jobs available at the moment</p>
+                    </div>
+                  ) : (
+                    hotJobs.map(job => (
+                      <div key={job.id} className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-all hover:border-blue-300 cursor-pointer" onClick={() => navigate(`/jobs/${job.id}`)}>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="text-lg font-bold text-gray-900">{job.title}</h3>
+                              <Badge className="bg-orange-100 text-orange-800 flex items-center gap-1">
+                                <Sparkles className="h-3 w-3" />
+                                Hot
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 flex items-center gap-1 mb-2">
+                              <Building className="h-4 w-4" />
+                              {job.company}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-3 text-sm text-gray-600 mb-3">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {job.location}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Briefcase className="h-4 w-4" />
+                            {job.workModel?.charAt(0).toUpperCase() + job.workModel?.slice(1)}
+                          </span>
+                          {job.salaryMin && job.salaryMax && (
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="h-4 w-4" />
+                              ${(job.salaryMin / 1000).toFixed(0)}k - ${(job.salaryMax / 1000).toFixed(0)}k
+                            </span>
+                          )}
+                        </div>
+                        
+                        {job.skills && job.skills.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {job.skills.slice(0, 4).map((skill, idx) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              {job.views} views
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              {job.applications_count} applicants
+                            </span>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            className="bg-gradient-to-r from-blue-600 to-green-600"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigate(`/jobs/${job.id}`)
+                            }}
+                          >
+                            Apply Now
+                            <ArrowRight className="h-4 w-4 ml-1" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Upcoming Interviews */}
             {(activeTab === 'overview' || activeTab === 'interviews') && upcomingInterviews.length > 0 && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">

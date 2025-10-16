@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     MONGODB_DB_NAME: str = "hotgigs"
     REDIS_URL: str = "redis://localhost:6379"
     
+    # Supabase
+    SUPABASE_URL: str = ""
+    SUPABASE_ANON_KEY: str = ""
+    
     # Security
     SECRET_KEY: str = "your-secret-key-change-in-production-min-32-chars-long"
     ALGORITHM: str = "HS256"
