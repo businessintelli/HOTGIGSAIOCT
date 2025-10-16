@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, Upload, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react'
+import { X, Upload, CheckCircle, ArrowLeft, ArrowRight, FileText, Video, Play } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import api from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -30,8 +31,46 @@ export default function JobApplicationModal({ job, onClose, onSuccess }) {
   // Application data
   const [applicationData, setApplicationData] = useState({
     cover_letter: '',
-    resume_url: ''
+    availability: '',
+    resume_id: null,
+    video_id: null
   })
+
+  // Saved documents
+  const [savedResumes, setSavedResumes] = useState([])
+  const [savedVideos, setSavedVideos] = useState([])
+
+  // Load saved documents
+  useEffect(() => {
+    loadSavedDocuments()
+  }, [])
+
+  const loadSavedDocuments = async () => {
+    try {
+      // TODO: Load from API
+      // Mock data for now
+      setSavedResumes([
+        { id: '1', name: 'Software_Engineer_Resume.pdf', uploaded_at: '2025-01-10', size: '245 KB', is_default: true },
+        { id: '2', name: 'Full_Stack_Developer_Resume.pdf', uploaded_at: '2025-01-05', size: '198 KB', is_default: false }
+      ])
+      
+      setSavedVideos([
+        { id: '1', title: 'Video Introduction', duration: 720, uploaded_at: '2025-01-08', ai_score: 87, is_default: true }
+      ])
+      
+      // Set default selections
+      const defaultResume = savedResumes.find(r => r.is_default)
+      const defaultVideo = savedVideos.find(v => v.is_default)
+      
+      setApplicationData(prev => ({
+        ...prev,
+        resume_id: defaultResume?.id || savedResumes[0]?.id || null,
+        video_id: defaultVideo?.id || savedVideos[0]?.id || null
+      }))
+    } catch (error) {
+      console.error('Error loading documents:', error)
+    }
+  }
 
   // Skill assessments
   const [skillAssessments, setSkillAssessments] = useState({})
@@ -144,10 +183,16 @@ export default function JobApplicationModal({ job, onClose, onSuccess }) {
   }
 
   const getTotalSteps = () => {
-    let steps = 2 // Basic info + Review
+    let steps = 3 // Basic info + Documents + Review
     if (skillRequirements.length > 0) steps++
     if (screeningQuestions.length > 0) steps++
     return steps
+  }
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   const renderStepIndicator = () => {
@@ -176,7 +221,7 @@ export default function JobApplicationModal({ job, onClose, onSuccess }) {
 
   const renderBasicInfo = () => (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Application Information</h3>
+      <h3 className="text-lg font-semibold">Basic Information</h3>
       
       <div>
         <label className="block text-sm font-medium mb-2">Cover Letter (Optional)</label>
@@ -190,25 +235,126 @@ export default function JobApplicationModal({ job, onClose, onSuccess }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">Resume</label>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-          <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-600 mb-2">Upload your resume</p>
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx"
-            onChange={(e) => {
-              // TODO: Handle file upload
-              console.log('File selected:', e.target.files[0])
-            }}
-            className="hidden"
-            id="resume-upload"
-          />
-          <label htmlFor="resume-upload">
-            <Button asChild>
-              <span>Choose File</span>
+        <label className="block text-sm font-medium mb-2">Availability</label>
+        <Input
+          value={applicationData.availability}
+          onChange={(e) => setApplicationData({ ...applicationData, availability: e.target.value })}
+          placeholder="e.g., Available immediately, 2 weeks notice"
+        />
+      </div>
+    </div>
+  )
+
+  const renderDocumentSelection = () => (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Select Resume & Video</h3>
+      <p className="text-sm text-gray-600">Choose which resume and video profile to submit with your application</p>
+      
+      {/* Resume Selection */}
+      <div>
+        <label className="block text-sm font-medium mb-3 flex items-center gap-2">
+          <FileText className="h-4 w-4" />
+          Resume *
+        </label>
+        {savedResumes.length > 0 ? (
+          <div className="space-y-2">
+            {savedResumes.map(resume => (
+              <div
+                key={resume.id}
+                onClick={() => setApplicationData({ ...applicationData, resume_id: resume.id })}
+                className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                  applicationData.resume_id === resume.id
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-gray-600" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{resume.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {resume.size} • Uploaded {resume.uploaded_at}
+                    </p>
+                  </div>
+                  {applicationData.resume_id === resume.id && (
+                    <CheckCircle className="h-5 w-5 text-blue-600" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+            <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-600 mb-2">No resumes uploaded</p>
+            <Button size="sm" variant="outline" onClick={() => window.open('/profile', '_blank')}>
+              Upload Resume
             </Button>
-          </label>
+          </div>
+        )}
+      </div>
+
+      {/* Video Selection */}
+      <div>
+        <label className="block text-sm font-medium mb-3 flex items-center gap-2">
+          <Video className="h-4 w-4" />
+          Video Profile (Optional)
+        </label>
+        {savedVideos.length > 0 ? (
+          <div className="space-y-2">
+            <div
+              onClick={() => setApplicationData({ ...applicationData, video_id: null })}
+              className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                applicationData.video_id === null
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <X className="h-5 w-5 text-gray-600" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">Don't include video</p>
+                </div>
+                {applicationData.video_id === null && (
+                  <CheckCircle className="h-5 w-5 text-blue-600" />
+                )}
+              </div>
+            </div>
+            {savedVideos.map(video => (
+              <div
+                key={video.id}
+                onClick={() => setApplicationData({ ...applicationData, video_id: video.id })}
+                className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                  applicationData.video_id === video.id
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Video className="h-5 w-5 text-gray-600" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{video.title}</p>
+                    <p className="text-xs text-gray-500">
+                      {formatDuration(video.duration)} • AI Score: {video.ai_score} • {video.uploaded_at}
+                    </p>
+                  </div>
+                  {applicationData.video_id === video.id && (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+            <Video className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-600 mb-2">No video profiles yet</p>
+            <Button size="sm" variant="outline" onClick={() => window.open('/profile', '_blank')}>
+              Record Video
+            </Button>
+          </div>
+        )}
+      </div>
           <p className="text-xs text-gray-500 mt-2">PDF, DOC, or DOCX (Max 5MB)</p>
         </div>
       </div>
@@ -421,7 +567,13 @@ export default function JobApplicationModal({ job, onClose, onSuccess }) {
           Cover letter: {applicationData.cover_letter ? 'Provided' : 'Not provided'}
         </p>
         <p className="text-sm text-blue-700">
-          Resume: {applicationData.resume_url ? 'Uploaded' : 'Not uploaded'}
+          Availability: {applicationData.availability || 'Not specified'}
+        </p>
+        <p className="text-sm text-blue-700">
+          Resume: {applicationData.resume_id ? savedResumes.find(r => r.id === applicationData.resume_id)?.name : 'Not selected'}
+        </p>
+        <p className="text-sm text-blue-700">
+          Video Profile: {applicationData.video_id ? savedVideos.find(v => v.id === applicationData.video_id)?.title : 'Not included'}
         </p>
       </div>
 
@@ -454,19 +606,27 @@ export default function JobApplicationModal({ job, onClose, onSuccess }) {
   const getStepContent = () => {
     let stepNumber = 1
     
+    // Step 1: Basic Info
     if (currentStep === stepNumber) return renderBasicInfo()
     stepNumber++
     
+    // Step 2: Document Selection
+    if (currentStep === stepNumber) return renderDocumentSelection()
+    stepNumber++
+    
+    // Step 3: Skill Assessment (if required)
     if (skillRequirements.length > 0) {
       if (currentStep === stepNumber) return renderSkillAssessment()
       stepNumber++
     }
     
+    // Step 4: Screening Questions (if required)
     if (screeningQuestions.length > 0) {
       if (currentStep === stepNumber) return renderScreeningQuestions()
       stepNumber++
     }
     
+    // Final Step: Review
     return renderReview()
   }
 
