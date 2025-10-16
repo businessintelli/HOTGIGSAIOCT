@@ -1,9 +1,59 @@
-from sqlalchemy import Column, String, Integer, Float, Text, Boolean, ForeignKey, DateTime, ARRAY, JSON
+from sqlalchemy import Column, String, Integer, Boolean, Text, ForeignKey, DateTime, Float, JSON, ARRAY, Date, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
+import enum
 from src.db.base import Base
+
+class WorkAuthorizationType(str, enum.Enum):
+    US_CITIZEN = "us_citizen"
+    GREEN_CARD = "green_card"
+    H1B = "h1b"
+    L1 = "l1"
+    OPT = "opt"
+    CPT = "cpt"
+    EAD = "ead"
+    TN = "tn"
+    OTHER = "other"
+    NEED_SPONSORSHIP = "need_sponsorship"
+
+class VisaStatus(str, enum.Enum):
+    NOT_APPLICABLE = "not_applicable"
+    VALID = "valid"
+    EXPIRED = "expired"
+    PENDING_RENEWAL = "pending_renewal"
+    PENDING_TRANSFER = "pending_transfer"
+
+class Gender(str, enum.Enum):
+    MALE = "male"
+    FEMALE = "female"
+    NON_BINARY = "non_binary"
+    PREFER_NOT_TO_SAY = "prefer_not_to_say"
+
+class EducationLevel(str, enum.Enum):
+    HIGH_SCHOOL = "high_school"
+    ASSOCIATE = "associate"
+    BACHELOR = "bachelor"
+    MASTER = "master"
+    DOCTORATE = "doctorate"
+    PROFESSIONAL = "professional"
+    CERTIFICATE = "certificate"
+
+class WorkModel(str, enum.Enum):
+    ONSITE = "onsite"
+    HYBRID = "hybrid"
+    REMOTE = "remote"
+    FLEXIBLE = "flexible"
+
+class RateType(str, enum.Enum):
+    HOURLY = "hourly"
+    SALARY = "salary"
+
+class EmploymentType(str, enum.Enum):
+    W2 = "w2"
+    C2C = "c2c"
+    CONTRACTOR_1099 = "1099"
 
 class CandidateProfile(Base):
     __tablename__ = "candidate_profiles"
@@ -25,18 +75,61 @@ class CandidateProfile(Base):
     current_company = Column(String, nullable=True)
     current_position = Column(String, nullable=True)
     
-    # Job Preferences
+    # Job Preferences (Deprecated - moved to new fields below)
     desired_job_titles = Column(ARRAY(String), nullable=True)
     desired_locations = Column(ARRAY(String), nullable=True)
     desired_salary_min = Column(Integer, nullable=True)
     desired_salary_max = Column(Integer, nullable=True)
     job_type_preferences = Column(ARRAY(String), nullable=True)  # full-time, part-time, contract, remote
-    willing_to_relocate = Column(Boolean, default=False)
     
     # Resume
     resume_url = Column(String, nullable=True)
     resume_filename = Column(String, nullable=True)
     resume_parsed_data = Column(JSON, nullable=True)  # Parsed resume data
+    
+    # Extended Profile Information
+    date_of_birth = Column(Date, nullable=True)
+    gender = Column(SQLEnum(Gender), nullable=True)
+    nationality = Column(String(100), nullable=True)
+    current_zip_code = Column(String(20), nullable=True)
+    
+    # Work Authorization
+    work_authorization = Column(SQLEnum(WorkAuthorizationType), nullable=True)
+    work_authorization_end_date = Column(Date, nullable=True)
+    visa_status = Column(SQLEnum(VisaStatus), nullable=True)
+    w2_employer_name = Column(String(255), nullable=True)
+    
+    # Education Details
+    highest_education = Column(SQLEnum(EducationLevel), nullable=True)
+    education_specialization = Column(String(255), nullable=True)
+    degree_start_date = Column(Date, nullable=True)
+    degree_end_date = Column(Date, nullable=True)
+    university_name = Column(String(255), nullable=True)
+    
+    # Identification (Secure)
+    passport_number = Column(String(50), nullable=True)
+    ssn_last_4 = Column(String(4), nullable=True)
+    
+    # Location & Work Preferences
+    preferred_city = Column(String(100), nullable=True)
+    preferred_state = Column(String(50), nullable=True)
+    work_model_preference = Column(SQLEnum(WorkModel), nullable=True)
+    willing_to_relocate = Column(Boolean, default=False)
+    
+    # Availability
+    availability_date = Column(Date, nullable=True)
+    notice_period_days = Column(Integer, nullable=True)  # Notice period in days
+    
+    # Compensation
+    rate_type = Column(SQLEnum(RateType), nullable=True)
+    expected_rate_min = Column(Integer, nullable=True)  # In dollars
+    expected_rate_max = Column(Integer, nullable=True)  # In dollars
+    employment_type = Column(SQLEnum(EmploymentType), nullable=True)
+    rate_description = Column(String(100), nullable=True)  # e.g., "$XX/hr W2"
+    
+    # Professional Highlights
+    professional_summary = Column(Text, nullable=True)
+    key_strengths = Column(ARRAY(String), nullable=True)  # Array of impact points
     
     # AI Scores
     profile_completeness = Column(Integer, default=0)  # 0-100
