@@ -438,3 +438,48 @@ def log_admin_action(
     except Exception as e:
         print(f"Failed to log admin action: {str(e)}")
 
+
+
+
+# ============================================================================
+# Role-Based Template Filtering
+# ============================================================================
+
+@router.get("/email-templates/role/{role}", response_model=List[EmailTemplateResponse])
+async def get_templates_by_role(
+    role: str,
+    category: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Get email templates filtered by target role
+    
+    Args:
+        role: User role (recruiter, candidate, admin)
+        category: Optional category filter
+    
+    Returns:
+        List of templates visible to the specified role
+    """
+    if role not in ['recruiter', 'candidate', 'admin']:
+        raise HTTPException(status_code=400, detail="Invalid role. Must be recruiter, candidate, or admin")
+    
+    query = db.query(EmailTemplate).filter(EmailTemplate.is_active == True)
+    
+    # Filter by role - show templates for specific role or 'both'
+    if role == 'admin':
+        # Admins can see all templates
+        pass
+    else:
+        query = query.filter(
+            (EmailTemplate.target_role == role) | 
+            (EmailTemplate.target_role == 'both')
+        )
+    
+    # Optional category filter
+    if category:
+        query = query.filter(EmailTemplate.category == category)
+    
+    templates = query.all()
+    return templates
+

@@ -34,6 +34,7 @@ import EmailTemplates from './pages/admin/EmailTemplates'
 import Configuration from './pages/admin/Configuration'
 import APIKeys from './pages/admin/APIKeys'
 import EmailLogs from './pages/admin/EmailLogs'
+import SystemHealth from './pages/admin/SystemHealth'
 import { AuthProvider } from './contexts/AuthContext'
 
 function App() {
@@ -77,6 +78,7 @@ function App() {
             <Route path="config" element={<Configuration />} />
             <Route path="api-keys" element={<APIKeys />} />
             <Route path="email-logs" element={<EmailLogs />} />
+            <Route path="system-health" element={<SystemHealth />} />
           </Route>
         </Routes>
       </Router>

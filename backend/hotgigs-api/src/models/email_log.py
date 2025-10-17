@@ -93,6 +93,7 @@ class EmailTemplate(Base):
     # Template metadata
     description = Column(Text)
     category = Column(String(50), index=True)  # transactional, marketing, notification
+    target_role = Column(String(50), index=True)  # recruiter, candidate, both, admin
     
     # Version control
     version = Column(Integer, default=1)
