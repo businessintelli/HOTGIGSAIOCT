@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://localhost:3000",
+        "https://3000-ieax82bblh1eijfgixov5-97ad08b4.manusvm.computer",
         "https://5173-ieax82bblh1eijfgixov5-97ad08b4.manusvm.computer",
         "*"  # Allow all origins in development
     ]
