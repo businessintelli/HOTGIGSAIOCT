@@ -150,7 +150,7 @@ const EmailAnalytics = () => {
             </div>
             <h3 className="text-gray-600 font-medium">Bounce Rate</h3>
             <div className="mt-2 flex items-center gap-1 text-sm text-green-600">
-              <TrendingUp className="w-4 h-4 className="transform rotate-180" />
+              <TrendingUp className="w-4 h-4 transform rotate-180" />
               <span>-1.3% from last period</span>
             </div>
           </div>

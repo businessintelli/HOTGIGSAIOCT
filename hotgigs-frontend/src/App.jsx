@@ -30,6 +30,10 @@ import EmailAnalytics from './pages/EmailAnalytics'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminOverview from './pages/admin/AdminOverview'
+import EmailTemplates from './pages/admin/EmailTemplates'
+import Configuration from './pages/admin/Configuration'
+import APIKeys from './pages/admin/APIKeys'
+import EmailLogs from './pages/admin/EmailLogs'
 import { AuthProvider } from './contexts/AuthContext'
 
 function App() {
@@ -69,6 +73,10 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />}>
             <Route index element={<AdminOverview />} />
             <Route path="dashboard" element={<AdminOverview />} />
+            <Route path="email-templates" element={<EmailTemplates />} />
+            <Route path="config" element={<Configuration />} />
+            <Route path="api-keys" element={<APIKeys />} />
+            <Route path="email-logs" element={<EmailLogs />} />
           </Route>
         </Routes>
       </Router>
