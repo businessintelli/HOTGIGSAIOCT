@@ -27,6 +27,9 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsOfService from './pages/TermsOfService'
 import EmailPreferences from './pages/EmailPreferences'
 import EmailAnalytics from './pages/EmailAnalytics'
+import AdminLogin from './pages/admin/AdminLogin'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminOverview from './pages/admin/AdminOverview'
 import { AuthProvider } from './contexts/AuthContext'
 
 function App() {
@@ -62,6 +65,11 @@ function App() {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/email-preferences" element={<EmailPreferences />} />
           <Route path="/email-analytics" element={<EmailAnalytics />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminDashboard />}>
+            <Route index element={<AdminOverview />} />
+            <Route path="dashboard" element={<AdminOverview />} />
+          </Route>
         </Routes>
       </Router>
     </AuthProvider>

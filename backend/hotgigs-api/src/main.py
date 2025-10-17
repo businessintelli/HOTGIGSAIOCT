@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.routes import auth, jobs, candidates, companies, applications, ai_matching, ai_services, messages, job_assessment, video_profiles, emails, interviews, webhooks, email_preferences, email_analytics
+from src.api.routes import auth, jobs, candidates, companies, applications, ai_matching, ai_services, messages, job_assessment, video_profiles, emails, interviews, webhooks, email_preferences, email_analytics, admin, admin_auth
 from src.core.config import settings
 
 app = FastAPI(
@@ -34,6 +34,8 @@ app.include_router(interviews.router, prefix="/api/interviews", tags=["Interview
 app.include_router(webhooks.router, prefix="/api/webhooks", tags=["Webhooks"])
 app.include_router(email_preferences.router, prefix="/api/email-preferences", tags=["Email Preferences"])
 app.include_router(email_analytics.router, prefix="/api/email-analytics", tags=["Email Analytics"])
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(admin_auth.router, prefix="/api/admin/auth", tags=["Admin Auth"])
 
 @app.get("/")
 async def root():
