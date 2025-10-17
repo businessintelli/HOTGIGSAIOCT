@@ -1,11 +1,15 @@
 """
 Webhook handlers for external services
 """
-from fastapi import APIRouter, Request, HTTPException, Header
+from fastapi import APIRouter, Request, HTTPException, Header, Depends
 from typing import Optional
+from sqlalchemy.orm import Session
 import logging
 import hmac
 import hashlib
+
+from src.database import get_db
+from src.services.email_service_with_db import get_email_service_with_db
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +18,7 @@ router = APIRouter()
 @router.post("/resend")
 async def resend_webhook(
     request: Request,
+    db: Session = Depends(get_db),
     svix_id: Optional[str] = Header(None),
     svix_timestamp: Optional[str] = Header(None),
     svix_signature: Optional[str] = Header(None)
@@ -56,28 +61,24 @@ async def resend_webhook(
         logger.info(f"Received Resend webhook event: {event_type}")
         logger.debug(f"Event data: {event_data}")
         
-        # Handle different event types
+        # Get email service with database
+        email_service = get_email_service_with_db(db)
+        
+        # Process event based on type
         if event_type == "email.sent":
-            await handle_email_sent(event_data)
-            
+            await handle_email_sent(event_data, email_service)
         elif event_type == "email.delivered":
-            await handle_email_delivered(event_data)
-            
+            await handle_email_delivered(event_data, email_service)
         elif event_type == "email.delivery_delayed":
-            await handle_email_delayed(event_data)
-            
+            await handle_email_delayed(event_data, email_service)
         elif event_type == "email.bounced":
-            await handle_email_bounced(event_data)
-            
+            await handle_email_bounced(event_data, email_service)
         elif event_type == "email.complained":
-            await handle_email_complained(event_data)
-            
+            await handle_email_complained(event_data, email_service)
         elif event_type == "email.opened":
-            await handle_email_opened(event_data)
-            
+            await handle_email_opened(event_data, email_service)
         elif event_type == "email.clicked":
-            await handle_email_clicked(event_data)
-            
+            await handle_email_clicked(event_data, email_service)
         else:
             logger.warning(f"Unknown event type: {event_type}")
         
@@ -87,7 +88,7 @@ async def resend_webhook(
         logger.error(f"Error processing webhook: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-async def handle_email_sent(data: dict):
+async def handle_email_sent(data: dict, email_service = None):
     """Handle email.sent event"""
     email_id = data.get("email_id")
     to = data.get("to")
@@ -95,116 +96,91 @@ async def handle_email_sent(data: dict):
     
     logger.info(f"Email sent - ID: {email_id}, To: {to}, Subject: {subject}")
     
-    # TODO: Update email status in database
-    # Example:
-    # db.query(EmailLog).filter(EmailLog.email_id == email_id).update({
-    #     "status": "sent",
-    #     "sent_at": datetime.now()
-    # })
+    if email_service:
+        email_service.update_email_status(email_id, "sent")
 
-async def handle_email_delivered(data: dict):
+async def handle_email_delivered(data: dict, email_service = None):
     """Handle email.delivered event"""
     email_id = data.get("email_id")
     to = data.get("to")
     
     logger.info(f"Email delivered - ID: {email_id}, To: {to}")
     
-    # TODO: Update email status in database
-    # Example:
-    # db.query(EmailLog).filter(EmailLog.email_id == email_id).update({
-    #     "status": "delivered",
-    #     "delivered_at": datetime.now()
-    # })
+    if email_service:
+        email_service.update_email_status(email_id, "delivered")
 
-async def handle_email_delayed(data: dict):
+async def handle_email_delayed(data: dict, email_service = None):
     """Handle email.delivery_delayed event"""
     email_id = data.get("email_id")
     to = data.get("to")
     
     logger.warning(f"Email delivery delayed - ID: {email_id}, To: {to}")
     
-    # TODO: Update email status in database
-    # Example:
-    # db.query(EmailLog).filter(EmailLog.email_id == email_id).update({
-    #     "status": "delayed"
-    # })
+    if email_service:
+        email_service.update_email_status(email_id, "delayed")
 
-async def handle_email_bounced(data: dict):
+async def handle_email_bounced(data: dict, email_service = None):
     """Handle email.bounced event"""
     email_id = data.get("email_id")
     to = data.get("to")
     bounce_type = data.get("bounce_type")  # hard or soft
+    reason = data.get("reason")
     
-    logger.error(f"Email bounced - ID: {email_id}, To: {to}, Type: {bounce_type}")
+    logger.warning(f"Email bounced - ID: {email_id}, To: {to}, Type: {bounce_type}, Reason: {reason}")
     
-    # TODO: Update email status and handle bounces
-    # Example:
-    # db.query(EmailLog).filter(EmailLog.email_id == email_id).update({
-    #     "status": "bounced",
-    #     "bounce_type": bounce_type,
-    #     "bounced_at": datetime.now()
-    # })
-    # 
-    # If hard bounce, mark email as invalid:
-    # if bounce_type == "hard":
-    #     db.query(User).filter(User.email == to).update({
-    #         "email_valid": False
-    #     })
+    if email_service:
+        email_service.update_email_status(
+            email_id, 
+            "bounced",
+            bounce_type=bounce_type,
+            bounce_reason=reason
+        )
 
-async def handle_email_complained(data: dict):
+async def handle_email_complained(data: dict, email_service = None):
     """Handle email.complained event (spam complaint)"""
     email_id = data.get("email_id")
     to = data.get("to")
     
-    logger.error(f"Email marked as spam - ID: {email_id}, To: {to}")
+    logger.warning(f"Email marked as spam - ID: {email_id}, To: {to}")
     
-    # TODO: Update email status and handle complaints
-    # Example:
-    # db.query(EmailLog).filter(EmailLog.email_id == email_id).update({
-    #     "status": "complained",
-    #     "complained_at": datetime.now()
-    # })
-    # 
-    # Unsubscribe user from marketing emails:
-    # db.query(User).filter(User.email == to).update({
-    #     "email_notifications": False
-    # })
+    if email_service:
+        email_service.update_email_status(email_id, "complained")
 
-async def handle_email_opened(data: dict):
+async def handle_email_opened(data: dict, email_service = None):
     """Handle email.opened event"""
     email_id = data.get("email_id")
     to = data.get("to")
+    user_agent = data.get("user_agent")
     
     logger.info(f"Email opened - ID: {email_id}, To: {to}")
     
-    # TODO: Update email analytics
-    # Example:
-    # db.query(EmailLog).filter(EmailLog.email_id == email_id).update({
-    #     "opened": True,
-    #     "opened_at": datetime.now(),
-    #     "open_count": EmailLog.open_count + 1
-    # })
+    if email_service:
+        email_service.update_email_status(
+            email_id, 
+            "opened",
+            user_agent=user_agent
+        )
 
-async def handle_email_clicked(data: dict):
+async def handle_email_clicked(data: dict, email_service = None):
     """Handle email.clicked event"""
     email_id = data.get("email_id")
     to = data.get("to")
     link = data.get("link")
+    user_agent = data.get("user_agent")
     
     logger.info(f"Email link clicked - ID: {email_id}, To: {to}, Link: {link}")
     
-    # TODO: Update email analytics
-    # Example:
-    # db.query(EmailLog).filter(EmailLog.email_id == email_id).update({
-    #     "clicked": True,
-    #     "clicked_at": datetime.now(),
-    #     "click_count": EmailLog.click_count + 1
-    # })
-    # 
-    # Track which link was clicked:
-    # EmailClick.create({
-    #     "email_id": email_id,
-    #     "link": link,
-    #     "clicked_at": datetime.now()
-    # })
+    if email_service:
+        # Update email status
+        email_service.update_email_status(
+            email_id, 
+            "clicked",
+            user_agent=user_agent
+        )
+        # Log the specific click
+        email_service.log_email_click(
+            email_id,
+            link,
+            user_agent=user_agent
+        )
 

@@ -25,6 +25,8 @@ import AIAgent from './pages/AIAgent'
 import Blog from './pages/Blog'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsOfService from './pages/TermsOfService'
+import EmailPreferences from './pages/EmailPreferences'
+import EmailAnalytics from './pages/EmailAnalytics'
 import { AuthProvider } from './contexts/AuthContext'
 
 function App() {
@@ -58,6 +60,8 @@ function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/email-preferences" element={<EmailPreferences />} />
+          <Route path="/email-analytics" element={<EmailAnalytics />} />
         </Routes>
       </Router>
     </AuthProvider>
