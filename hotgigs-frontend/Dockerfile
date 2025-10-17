@@ -18,6 +18,10 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Build the application
+# Environment variables will be passed at build time
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 RUN pnpm run build
 
 # Production stage
