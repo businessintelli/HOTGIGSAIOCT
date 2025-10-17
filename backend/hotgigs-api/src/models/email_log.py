@@ -46,7 +46,7 @@ class EmailLog(Base):
     bounce_reason = Column(Text)
     
     # Additional metadata
-    metadata = Column(JSON)
+    email_metadata = Column(JSON)
     
     # User agent for tracking
     user_agent = Column(Text)

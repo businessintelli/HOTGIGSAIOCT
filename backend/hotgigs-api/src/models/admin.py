@@ -172,7 +172,7 @@ class SystemHealth(Base):
     
     # Details
     message = Column(Text)
-    metadata = Column(JSON)
+    health_metadata = Column(JSON)
     
     # Timestamp
     checked_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
