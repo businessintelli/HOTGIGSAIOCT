@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getAdminApiUrl } from '../../config/api';
 import {
   Key, Plus, Trash2, Search, Filter, Save, X, Eye, EyeOff, Copy, CheckCircle, AlertCircle
 } from 'lucide-react';
@@ -33,7 +34,7 @@ const APIKeys = () => {
   const fetchAPIKeys = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:8000/api/admin/api-keys', {
+      const response = await fetch(getAdminApiUrl('api-keys'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -78,7 +79,7 @@ const APIKeys = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      await fetch(`http://localhost:8000/api/admin/api-keys/${apiKey.id}`, {
+      await fetch(getAdminApiUrl(`api-keys/${apiKey.id}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -95,7 +96,7 @@ const APIKeys = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      await fetch('http://localhost:8000/api/admin/api-keys', {
+      await fetch(getAdminApiUrl('api-keys'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

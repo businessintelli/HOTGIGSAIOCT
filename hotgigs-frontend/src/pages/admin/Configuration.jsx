@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getAdminApiUrl } from '../../config/api';
 import {
   Settings, Plus, Edit, Trash2, Search, Filter, Save, X, Eye, EyeOff, AlertCircle
 } from 'lucide-react';
@@ -35,7 +36,7 @@ const Configuration = () => {
   const fetchConfigs = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:8000/api/admin/config', {
+      const response = await fetch(getAdminApiUrl('config'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -96,7 +97,7 @@ const Configuration = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      await fetch(`http://localhost:8000/api/admin/config/${config.key}`, {
+      await fetch(getAdminApiUrl(`config/${config.key}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -114,8 +115,8 @@ const Configuration = () => {
     try {
       const token = localStorage.getItem('adminToken');
       const url = modalMode === 'create'
-        ? 'http://localhost:8000/api/admin/config'
-        : `http://localhost:8000/api/admin/config/${selectedConfig.key}`;
+        ? getAdminApiUrl('config')
+        : getAdminApiUrl(`config/${selectedConfig.key}`);
       
       const method = modalMode === 'create' ? 'POST' : 'PUT';
 

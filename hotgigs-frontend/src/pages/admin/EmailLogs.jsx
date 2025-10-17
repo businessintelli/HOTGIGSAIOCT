@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getAdminApiUrl } from '../../config/api';
 import {
   FileText, Search, Filter, Calendar, Mail, CheckCircle, XCircle,
   Clock, AlertCircle, Eye, Download, RefreshCw
@@ -34,7 +35,7 @@ const EmailLogs = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:8000/api/admin/email-logs', {
+      const response = await fetch(getAdminApiUrl('email-logs'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }

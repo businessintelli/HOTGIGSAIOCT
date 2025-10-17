@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getAdminApiUrl } from '../../config/api';
 import {
   Mail, Plus, Edit, Trash2, Eye, Search, Filter, X, Save, Code
 } from 'lucide-react';
@@ -33,7 +34,7 @@ const EmailTemplates = () => {
   const fetchTemplates = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:8000/api/admin/email-templates', {
+      const response = await fetch(getAdminApiUrl('email-templates'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -86,7 +87,7 @@ const EmailTemplates = () => {
   const fetchTemplateDetails = async (id) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:8000/api/admin/email-templates/${id}`, {
+      const response = await fetch(getAdminApiUrl(`email-templates/${id}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -117,7 +118,7 @@ const EmailTemplates = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      await fetch(`http://localhost:8000/api/admin/email-templates/${template.id}`, {
+      await fetch(getAdminApiUrl(`email-templates/${template.id}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -135,8 +136,8 @@ const EmailTemplates = () => {
     try {
       const token = localStorage.getItem('adminToken');
       const url = modalMode === 'create'
-        ? 'http://localhost:8000/api/admin/email-templates'
-        : `http://localhost:8000/api/admin/email-templates/${selectedTemplate.id}`;
+        ? getAdminApiUrl('email-templates')
+        : getAdminApiUrl(`email-templates/${selectedTemplate.id}`);
       
       const method = modalMode === 'create' ? 'POST' : 'PUT';
 

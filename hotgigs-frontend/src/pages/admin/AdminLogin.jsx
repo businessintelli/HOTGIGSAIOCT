@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, Shield, AlertCircle } from 'lucide-react';
+import { getAdminApiUrl } from '../../config/api';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/admin/auth/login', {
+      const response = await fetch(getAdminApiUrl('auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
