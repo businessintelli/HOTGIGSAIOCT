@@ -36,6 +36,11 @@ import APIKeys from './pages/admin/APIKeys'
 import EmailLogs from './pages/admin/EmailLogs'
 import SystemHealth from './pages/admin/SystemHealth'
 import { AuthProvider } from './contexts/AuthContext'
+import ResumeUpload from './components/ResumeUpload'
+import CandidateDatabase from './components/CandidateDatabase'
+import CandidateDetail from './components/CandidateDetail'
+import GoogleDriveSetup from './components/GoogleDriveSetup'
+import MatchingDashboard from './components/MatchingDashboard'
 
 function App() {
   return (
@@ -79,7 +84,17 @@ function App() {
             <Route path="api-keys" element={<APIKeys />} />
             <Route path="email-logs" element={<EmailLogs />} />
             <Route path="system-health" element={<SystemHealth />} />
+            <Route path="candidates" element={<CandidateDatabase isAdmin={true} />} />
           </Route>
+          
+          {/* Resume Import Routes */}
+          <Route path="/resume-import" element={<ResumeUpload mode="single" />} />
+          <Route path="/resume-import/bulk" element={<ResumeUpload mode="bulk" />} />
+          <Route path="/candidates" element={<CandidateDatabase isAdmin={false} />} />
+          <Route path="/candidates/:id" element={<CandidateDetail />} />
+          <Route path="/google-drive-setup" element={<GoogleDriveSetup />} />
+          <Route path="/matching/:candidateId" element={<MatchingDashboard type="candidate" />} />
+          <Route path="/job-matches/:jobId" element={<MatchingDashboard type="job" />} />
         </Routes>
       </Router>
     </AuthProvider>
