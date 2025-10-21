@@ -20,7 +20,16 @@ from src.models.job import Job
 from src.models.resume import CandidateMatch, Resume, ResumeData
 from src.models.candidate_database import RecruiterCandidate
 from src.core.security import get_current_user
-from src.tasks.matching_tasks import match_candidate_to_jobs, match_job_to_candidates
+# Optional matching tasks
+try:
+    from src.tasks.matching_tasks import match_candidate_to_jobs, match_job_to_candidates
+    MATCHING_AVAILABLE = True
+except ImportError:
+    MATCHING_AVAILABLE = False
+    def match_candidate_to_jobs(*args, **kwargs):
+        pass
+    def match_job_to_candidates(*args, **kwargs):
+        pass
 
 router = APIRouter(prefix="/api/matching", tags=["Matching"])
 

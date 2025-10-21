@@ -17,7 +17,14 @@ from src.db.session import get_db
 from src.models.user import User, UserRole
 from src.models.resume import GoogleDriveSync
 from src.core.security import get_current_user
-from src.tasks.google_drive_tasks import sync_google_drive_folder
+# Optional Google Drive tasks
+try:
+    from src.tasks.google_drive_tasks import sync_google_drive_folder
+    GOOGLE_DRIVE_AVAILABLE = True
+except ImportError:
+    GOOGLE_DRIVE_AVAILABLE = False
+    def sync_google_drive_folder(*args, **kwargs):
+        pass
 
 router = APIRouter(prefix="/api/google-drive", tags=["Google Drive"])
 

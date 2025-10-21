@@ -155,7 +155,7 @@ class CandidateActivity(Base):
     reference_id = Column(UUID(as_uuid=True), nullable=True, index=True)
     
     # Metadata
-    metadata = Column(JSONB, default=dict, nullable=False)
+    activity_metadata = Column(JSONB, default=dict, nullable=False)
     ip_address = Column(String(45), nullable=True)
     user_agent = Column(Text, nullable=True)
     

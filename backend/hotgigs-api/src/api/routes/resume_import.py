@@ -24,8 +24,20 @@ from src.models.candidate_database import (
     CandidateSource, ActivityType, CandidateNote, CandidateTag
 )
 from src.core.security import get_current_user
-from src.tasks.resume_tasks import process_resume, process_bulk_upload
-from src.tasks.matching_tasks import match_candidate_to_jobs
+# Optional Celery tasks - will use synchronous processing if not available
+try:
+    from src.tasks.resume_tasks import process_resume, process_bulk_upload
+    from src.tasks.matching_tasks import match_candidate_to_jobs
+    CELERY_AVAILABLE = True
+except ImportError:
+    CELERY_AVAILABLE = False
+    # Stub functions for when Celery is not available
+    def process_resume(*args, **kwargs):
+        pass
+    def process_bulk_upload(*args, **kwargs):
+        pass
+    def match_candidate_to_jobs(*args, **kwargs):
+        pass
 
 router = APIRouter(prefix="/api/resumes", tags=["Resume Import"])
 
