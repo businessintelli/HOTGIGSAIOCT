@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     RESEND_FROM_EMAIL: str = "noreply@hotgigs.com"
     
+    # File Upload Configuration
+    UPLOAD_DIR: str = "/tmp/hotgigs/uploads"
+    MAX_UPLOAD_SIZE: int = 10485760  # 10MB default
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
