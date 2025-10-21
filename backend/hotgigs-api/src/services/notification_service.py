@@ -281,6 +281,122 @@ class NotificationService:
             action_url="/settings/team"
         )
     
+    # Resume Import System Notifications
+    
+    def notify_resume_completed(
+        self,
+        user_id: uuid.UUID,
+        candidate_name: str,
+        resume_id: uuid.UUID,
+        candidate_id: uuid.UUID
+    ):
+        """Notify user that resume processing is completed"""
+        
+        return self.create_notification(
+            user_id=user_id,
+            notification_type=NotificationType.RESUME_COMPLETED,
+            title="Resume Processing Complete",
+            message=f"Resume for {candidate_name} has been processed successfully",
+            action_url=f"/candidates/{candidate_id}"
+        )
+    
+    def notify_candidate_added(
+        self,
+        recruiter_id: uuid.UUID,
+        candidate_name: str,
+        candidate_id: uuid.UUID,
+        source: str
+    ):
+        """Notify recruiter that a new candidate has been added"""
+        
+        return self.create_notification(
+            user_id=recruiter_id,
+            notification_type=NotificationType.CANDIDATE_ADDED,
+            title="New Candidate Added",
+            message=f"New candidate {candidate_name} added from {source}",
+            action_url=f"/candidates/{candidate_id}"
+        )
+    
+    def notify_candidate_shared(
+        self,
+        recruiter_id: uuid.UUID,
+        candidate_name: str,
+        candidate_id: uuid.UUID,
+        shared_by_name: str
+    ):
+        """Notify recruiter that a candidate has been shared with them"""
+        
+        return self.create_notification(
+            user_id=recruiter_id,
+            notification_type=NotificationType.CANDIDATE_SHARED,
+            title="Candidate Shared With You",
+            message=f"{shared_by_name} shared candidate {candidate_name} with you",
+            action_url=f"/candidates/{candidate_id}"
+        )
+    
+    def notify_match_found(
+        self,
+        user_id: uuid.UUID,
+        match_score: float,
+        job_title: str = None,
+        candidate_name: str = None,
+        match_id: uuid.UUID = None
+    ):
+        """Notify user that a new match has been found"""
+        
+        if job_title:
+            title = "New Job Match Found"
+            message = f"New {match_score:.0f}% match found: {job_title}"
+        elif candidate_name:
+            title = "New Candidate Match Found"
+            message = f"New {match_score:.0f}% match found: {candidate_name}"
+        else:
+            title = "New Match Found"
+            message = f"New {match_score:.0f}% match found"
+        
+        return self.create_notification(
+            user_id=user_id,
+            notification_type=NotificationType.MATCH_FOUND,
+            title=title,
+            message=message,
+            action_url=f"/matches/{match_id}" if match_id else "/matches"
+        )
+    
+    def notify_bulk_upload_completed(
+        self,
+        user_id: uuid.UUID,
+        total_files: int,
+        successful: int,
+        failed: int,
+        batch_id: uuid.UUID
+    ):
+        """Notify user that bulk upload is completed"""
+        
+        return self.create_notification(
+            user_id=user_id,
+            notification_type=NotificationType.BULK_UPLOAD_COMPLETED,
+            title="Bulk Upload Complete",
+            message=f"Bulk upload completed: {successful}/{total_files} successful",
+            action_url=f"/candidates?batch={batch_id}"
+        )
+    
+    def notify_google_drive_sync_completed(
+        self,
+        user_id: uuid.UUID,
+        folder_name: str,
+        new_files: int,
+        sync_id: uuid.UUID
+    ):
+        """Notify user that Google Drive sync is completed"""
+        
+        return self.create_notification(
+            user_id=user_id,
+            notification_type=NotificationType.GOOGLE_DRIVE_SYNC_COMPLETED,
+            title="Google Drive Sync Complete",
+            message=f"Google Drive sync completed: {new_files} new resumes from {folder_name}",
+            action_url=f"/google-drive?sync={sync_id}"
+        )
+    
     # Notification preferences
     
     def get_user_preferences(self, user_id: uuid.UUID) -> Optional[NotificationPreference]:

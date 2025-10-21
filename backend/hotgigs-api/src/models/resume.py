@@ -9,6 +9,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Foreign
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
+from src.db.base import Base
 
 
 class ResumeStatus(str, enum.Enum):
@@ -38,7 +39,7 @@ class ImportSource(str, enum.Enum):
     API_IMPORT = "api_import"
 
 
-class Resume:
+class Resume(Base):
     """
     Resume metadata and file information.
     
@@ -81,7 +82,7 @@ class Resume:
     processing_job = relationship("ProcessingJob", back_populates="resume", uselist=False, cascade="all, delete-orphan")
 
 
-class ResumeData:
+class ResumeData(Base):
     """
     Parsed and structured resume data.
     
@@ -173,7 +174,7 @@ class ResumeData:
     resume = relationship("Resume", back_populates="resume_data")
 
 
-class ProcessingJob:
+class ProcessingJob(Base):
     """
     Background processing job for resume parsing.
     
@@ -213,7 +214,7 @@ class ProcessingJob:
     resume = relationship("Resume", back_populates="processing_job")
 
 
-class CandidateMatch:
+class CandidateMatch(Base):
     """
     Candidate-to-job matching results.
     
@@ -257,7 +258,7 @@ class CandidateMatch:
     resume = relationship("Resume", foreign_keys=[resume_id])
 
 
-class GoogleDriveSync:
+class GoogleDriveSync(Base):
     """
     Google Drive folder sync configuration.
     
@@ -298,7 +299,7 @@ class GoogleDriveSync:
     recruiter = relationship("User", foreign_keys=[recruiter_id])
 
 
-class BulkUploadBatch:
+class BulkUploadBatch(Base):
     """
     Bulk upload batch tracking.
     

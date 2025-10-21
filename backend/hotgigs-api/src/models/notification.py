@@ -24,6 +24,14 @@ class NotificationType(str, enum.Enum):
     JOB_POSTED = "job_posted"
     TEAM_INVITATION = "team_invitation"
     SYSTEM_ANNOUNCEMENT = "system_announcement"
+    
+    # Resume Import System Notifications
+    RESUME_COMPLETED = "resume_completed"
+    CANDIDATE_ADDED = "candidate_added"
+    CANDIDATE_SHARED = "candidate_shared"
+    MATCH_FOUND = "match_found"
+    BULK_UPLOAD_COMPLETED = "bulk_upload_completed"
+    GOOGLE_DRIVE_SYNC_COMPLETED = "google_drive_sync_completed"
 
 
 class Notification(Base):
