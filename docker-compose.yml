@@ -28,12 +28,28 @@ services:
       # OpenAI API (for AI features)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       
+      # Redis and Celery Configuration
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      
+      # Google Drive API (optional)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8000/api/google-drive/auth/callback}
+      
+      # File Upload Configuration
+      MAX_UPLOAD_SIZE: 10485760
+      UPLOAD_DIR: /app/uploads
+      
       # Application Settings
       PYTHONUNBUFFERED: 1
       PYTHONPATH: /app/src
       
     ports:
       - "8000:8000"
+    depends_on:
+      - redis
     networks:
       - hotgigs-network
     volumes:
@@ -68,11 +84,71 @@ services:
       VITE_SUPABASE_URL: ${SUPABASE_URL:-https://rhzetgynouwyegixzshj.supabase.co}
       VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoemV0Z3lub3V3eWVnaXh6c2hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNDU0MDEsImV4cCI6MjA3MTgyMTQwMX0.gOE1EgnQUeZfV2Shf2XWamdrUrSjIHoIaccqfFHhKf0}
 
+  # Redis for Celery broker
+  redis:
+    image: redis:7-alpine
+    container_name: hotgigs-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - hotgigs-network
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  # Celery Worker for background tasks
+  celery-worker:
+    build:
+      context: ./backend/hotgigs-api
+      dockerfile: Dockerfile
+    container_name: hotgigs-celery-worker
+    restart: unless-stopped
+    command: celery -A src.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:h-6B2wH8PSi4Rtn@db.rhzetgynouwyegixzshj.supabase.co:5432/postgres}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      PYTHONUNBUFFERED: 1
+      PYTHONPATH: /app/src
+    depends_on:
+      - redis
+      - backend
+    networks:
+      - hotgigs-network
+    volumes:
+      - ./backend/hotgigs-api/uploads:/app/uploads
+
+  # Celery Beat for scheduled tasks
+  celery-beat:
+    build:
+      context: ./backend/hotgigs-api
+      dockerfile: Dockerfile
+    container_name: hotgigs-celery-beat
+    restart: unless-stopped
+    command: celery -A src.celery_app beat --loglevel=info
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:h-6B2wH8PSi4Rtn@db.rhzetgynouwyegixzshj.supabase.co:5432/postgres}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      PYTHONUNBUFFERED: 1
+      PYTHONPATH: /app/src
+    depends_on:
+      - redis
+      - backend
+    networks:
+      - hotgigs-network
+
 networks:
   hotgigs-network:
     driver: bridge
 
 volumes:
   uploads:
+    driver: local
+  redis-data:
     driver: local
 
