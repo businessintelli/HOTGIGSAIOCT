@@ -40,6 +40,11 @@ const AdminDashboard = () => {
       exact: true
     },
     {
+      title: 'Master Database',
+      icon: <Database className="w-5 h-5" />,
+      path: '/admin/candidates'
+    },
+    {
       title: 'Email Templates',
       icon: <Mail className="w-5 h-5" />,
       path: '/admin/email-templates'

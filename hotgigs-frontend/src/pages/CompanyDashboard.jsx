@@ -7,13 +7,16 @@ import {
   ChevronDown, User, Settings, LogOut, Calendar, Clock, DollarSign,
   MapPin, TrendingUp, Filter, Search, MoreVertical, CheckCircle,
   XCircle, AlertCircle, Send, UserCheck, UserX, ArrowRight, Edit,
-  Trash2, Download, X, SlidersHorizontal, ArrowUpDown
+  Trash2, Download, X, SlidersHorizontal, ArrowUpDown, Upload, Database, Cloud
 } from 'lucide-react'
 import OrionChat from '../components/OrionChat'
 import { useAuth } from '../contexts/AuthContext'
 import { localJobsService } from '../lib/localJobsService'
 import { getDashboardAnalytics } from '../lib/analyticsService'
 import MetricsCards from '../components/analytics/MetricsCards'
+import ResumeUpload from '../components/ResumeUpload'
+import CandidateDatabase from '../components/CandidateDatabase'
+import GoogleDriveSetup from '../components/GoogleDriveSetup'
 import ApplicationFunnelChart from '../components/analytics/ApplicationFunnelChart'
 import PipelineChart from '../components/analytics/PipelineChart'
 import ApplicationsTimeSeriesChart from '../components/analytics/ApplicationsTimeSeriesChart'
@@ -412,6 +415,9 @@ export default function CompanyDashboard() {
                 { id: 'overview', label: 'Overview', count: null },
                 { id: 'applications', label: 'Applications', count: stats.totalApplications },
                 { id: 'jobs', label: 'Hot Jobs', count: stats.activeJobs },
+                { id: 'candidates', label: 'Candidates', count: 0 },
+                { id: 'resume-import', label: 'Resume Import', count: null },
+                { id: 'google-drive', label: 'Google Drive', count: null },
                 { id: 'analytics', label: 'Analytics', count: null }
               ].map(tab => (
                 <button
@@ -914,6 +920,36 @@ export default function CompanyDashboard() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Candidates Tab */}
+          {activeTab === 'candidates' && (
+            <div className="p-6">
+              <CandidateDatabase isAdmin={false} />
+            </div>
+          )}
+
+          {/* Resume Import Tab */}
+          {activeTab === 'resume-import' && (
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Resume Import</h2>
+                <p className="text-gray-600">Upload candidate resumes to automatically create profiles</p>
+              </div>
+              <ResumeUpload mode="single" />
+              <div className="mt-8 pt-8 border-t border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Bulk Upload</h3>
+                <p className="text-gray-600 mb-4">Upload up to 50 resumes at once</p>
+                <ResumeUpload mode="bulk" />
+              </div>
+            </div>
+          )}
+
+          {/* Google Drive Tab */}
+          {activeTab === 'google-drive' && (
+            <div className="p-6">
+              <GoogleDriveSetup />
             </div>
           )}
 
