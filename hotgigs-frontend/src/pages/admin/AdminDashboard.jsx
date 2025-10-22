@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Mail, Settings, Key, Database, FileText,
-  LogOut, Shield, Menu, X, BarChart3, Users, Activity
+  LogOut, Shield, Menu, X, BarChart3, Users, Activity, AlertTriangle
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -53,6 +53,11 @@ const AdminDashboard = () => {
       title: 'Email Logs',
       icon: <FileText className="w-5 h-5" />,
       path: '/admin/email-logs'
+    },
+    {
+      title: 'Error Logs',
+      icon: <AlertTriangle className="w-5 h-5" />,
+      path: '/admin/error-logs'
     },
     {
       title: 'Configuration',

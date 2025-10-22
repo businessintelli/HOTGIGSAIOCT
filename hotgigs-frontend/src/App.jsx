@@ -34,6 +34,7 @@ import EmailTemplates from './pages/admin/EmailTemplates'
 import Configuration from './pages/admin/Configuration'
 import APIKeys from './pages/admin/APIKeys'
 import EmailLogs from './pages/admin/EmailLogs'
+import ErrorLogs from './pages/admin/ErrorLogs'
 import SystemHealth from './pages/admin/SystemHealth'
 import { AuthProvider } from './contexts/AuthContext'
 import ResumeUpload from './components/ResumeUpload'
@@ -83,6 +84,7 @@ function App() {
             <Route path="config" element={<Configuration />} />
             <Route path="api-keys" element={<APIKeys />} />
             <Route path="email-logs" element={<EmailLogs />} />
+            <Route path="error-logs" element={<ErrorLogs />} />
             <Route path="system-health" element={<SystemHealth />} />
             <Route path="candidates" element={<CandidateDatabase isAdmin={true} />} />
           </Route>
