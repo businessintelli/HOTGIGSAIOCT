@@ -36,7 +36,8 @@ import APIKeys from './pages/admin/APIKeys'
 import EmailLogs from './pages/admin/EmailLogs'
 import ErrorLogs from './pages/admin/ErrorLogs'
 import SystemHealth from './pages/admin/SystemHealth'
-import AdminDashboardDemo from './pages/AdminDashboardDemo'
+import AdminDashboardDemo from './pages/AdminDashboardDemo';
+import AdminDashboardNoAuth from './pages/AdminDashboardNoAuth';
 import { AuthProvider } from './contexts/AuthContext'
 import ResumeUpload from './components/ResumeUpload'
 import CandidateDatabase from './components/CandidateDatabase'
@@ -79,6 +80,7 @@ function App() {
           <Route path="/email-analytics" element={<EmailAnalytics />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin-demo" element={<AdminDashboardDemo />} />
+          <Route path="/admin-dashboard-demo" element={<AdminDashboardNoAuth />} />
           <Route path="/admin" element={<AdminDashboard />}>
             <Route index element={<AdminOverview />} />
             <Route path="dashboard" element={<AdminOverview />} />
