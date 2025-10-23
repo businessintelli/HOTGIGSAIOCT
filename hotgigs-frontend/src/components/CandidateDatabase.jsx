@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TopSkills from './TopSkills';
 import { 
   Search, Filter, Download, Eye, Tag, FileText, 
   ChevronLeft, ChevronRight, Users, Briefcase, 
@@ -276,16 +277,14 @@ const CandidateDatabase = ({ isAdmin = false }) => {
                       </div>
 
                       {/* Top Skills */}
-                      {candidate.top_skills && candidate.top_skills.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {candidate.top_skills.slice(0, 5).map((skill, index) => (
-                            <span
-                              key={index}
-                              className="px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full"
-                            >
-                              {skill}
-                            </span>
-                          ))}
+                      {(candidate.top_technology_skills?.length > 0 || candidate.top_domain_skills?.length > 0) && (
+                        <div className="mt-3">
+                          <TopSkills
+                            technologySkills={candidate.technology_skills_with_scores || candidate.top_technology_skills || []}
+                            domainSkills={candidate.domain_skills_with_scores || candidate.top_domain_skills || []}
+                            showScores={false}
+                            variant="compact"
+                          />
                         </div>
                       )}
 

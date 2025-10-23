@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import TopSkills from './TopSkills';
+import FeedbackModal from './FeedbackModal';
 import {
   ArrowLeft, Mail, Phone, MapPin, Briefcase, GraduationCap,
   Award, Download, Plus, Tag, FileText, Calendar, ExternalLink,
@@ -14,6 +16,7 @@ const CandidateDetail = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddNote, setShowAddNote] = useState(false);
   const [showAddTag, setShowAddTag] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '', is_important: false });
   const [newTags, setNewTags] = useState('');
 
@@ -82,6 +85,26 @@ const CandidateDetail = () => {
       }
     } catch (error) {
       console.error('Error adding tags:', error);
+    }
+  };
+
+  const handleSubmitFeedback = async (feedbackData) => {
+    try {
+      const response = await fetch('/api/feedback/submit', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(feedbackData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Thank you! Accuracy: ${result.accuracy_score}%`);
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
     }
   };
 
@@ -214,6 +237,13 @@ const CandidateDetail = () => {
                 <Download className="w-4 h-4" />
                 <span>Download Resume</span>
               </button>
+              <button
+                onClick={() => setShowFeedbackModal(true)}
+                className="px-4 py-2 border border-orange-300 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 flex items-center space-x-2"
+              >
+                <Star className="w-4 h-4" />
+                <span>Review Parsing</span>
+              </button>
               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2">
                 <ExternalLink className="w-4 h-4" />
                 <span>Submit to Job</span>
@@ -257,7 +287,19 @@ const CandidateDetail = () => {
                   </div>
                 )}
 
-                {/* Skills */}
+                {/* Top Skills */}
+                {(candidate.top_technology_skills?.length > 0 || candidate.top_domain_skills?.length > 0) && (
+                  <div className="mb-6">
+                    <TopSkills
+                      technologySkills={candidate.technology_skills_with_scores || candidate.top_technology_skills || []}
+                      domainSkills={candidate.domain_skills_with_scores || candidate.top_domain_skills || []}
+                      showScores={true}
+                      variant="card"
+                    />
+                  </div>
+                )}
+
+                {/* All Skills */}
                 {candidate.skills && candidate.skills.length > 0 && (
                   <div className="bg-white rounded-lg border border-gray-200 p-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Skills</h2>
@@ -526,9 +568,16 @@ const CandidateDetail = () => {
           </div>
         </div>
       )}
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        candidate={candidate}
+        onSubmit={handleSubmitFeedback}
+      />
     </div>
   );
 };
-
-export default CandidateDetail;
+export default CandidateDetail;;
 
