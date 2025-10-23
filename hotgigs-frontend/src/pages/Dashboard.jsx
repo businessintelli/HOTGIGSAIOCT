@@ -307,7 +307,7 @@ export default function Dashboard() {
         {/* Tabs */}
         <div className="mb-6 border-b border-gray-200">
           <div className="flex gap-6">
-            {['overview', 'hot_jobs', 'applications', 'interviews', 'invitations', 'profile_views'].map(tab => (
+            {['overview', 'hot_jobs', 'applications', 'interviews', 'invitations', 'profile_views', 'profile_resume', 'video_profile', 'comprehensive_profile'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -554,6 +554,74 @@ export default function Dashboard() {
                       )}
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Profile & Resume Tab */}
+            {activeTab === 'profile_resume' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                      <FileText className="h-6 w-6 text-blue-600" />
+                      Profile & Resume
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">Manage your professional profile and resume</p>
+                  </div>
+                  <Button onClick={() => navigate('/profile')} variant="default">
+                    Edit Profile
+                  </Button>
+                </div>
+                <div className="text-center py-12">
+                  <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-4">Click "Edit Profile" to update your profile and resume</p>
+                </div>
+              </div>
+            )}
+
+            {/* Video Profile Tab */}
+            {activeTab === 'video_profile' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                      <Video className="h-6 w-6 text-purple-600" />
+                      Video Profile
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">Record a video introduction to stand out</p>
+                  </div>
+                  <Button onClick={() => navigate('/profile?tab=video')} variant="default">
+                    Record Video
+                  </Button>
+                </div>
+                <div className="text-center py-12">
+                  <Video className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-4">Create a video profile to showcase your personality and skills</p>
+                  <p className="text-sm text-gray-500">Video profiles get 3x more views from recruiters</p>
+                </div>
+              </div>
+            )}
+
+            {/* Comprehensive Profile Tab */}
+            {activeTab === 'comprehensive_profile' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                      <Award className="h-6 w-6 text-green-600" />
+                      Comprehensive Profile
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">Complete your profile for better job matches</p>
+                  </div>
+                  <Button onClick={() => navigate('/profile?tab=comprehensive')} variant="default">
+                    Complete Profile
+                  </Button>
+                </div>
+                <div className="text-center py-12">
+                  <Award className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-4">Add detailed information about your skills, experience, and preferences</p>
+                  <p className="text-sm text-gray-500">Complete profiles receive 5x more job invitations</p>
                 </div>
               </div>
             )}
