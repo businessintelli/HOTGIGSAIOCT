@@ -14,15 +14,16 @@ class Settings(BaseSettings):
         "https://5173-ieax82bblh1eijfgixov5-97ad08b4.manusvm.computer"
     ]
     
-    # Database
+    # Database - PostgreSQL (Supabase)
     DATABASE_URL: str = "postgresql://hotgigs_user:hotgigs_password@localhost:5432/hotgigs_db"
-    MONGODB_URL: str = "mongodb://localhost:27017"
-    MONGODB_DB_NAME: str = "hotgigs"
+    
+    # Redis (for caching and background tasks)
     REDIS_URL: str = "redis://localhost:6379"
     
-    # Supabase
+    # Supabase (PostgreSQL hosting)
     SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
     
     # Security
     SECRET_KEY: str = "your-secret-key-change-in-production-min-32-chars-long"
