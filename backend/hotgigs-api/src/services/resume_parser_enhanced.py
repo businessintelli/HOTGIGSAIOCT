@@ -27,6 +27,7 @@ from PIL import Image
 import io
 import phonenumbers
 from email_validator import validate_email, EmailNotValidError
+from .skill_ranker import rank_and_classify_skills
 
 # Configure logging
 logging.basicConfig(
@@ -518,6 +519,29 @@ Return ONLY valid JSON, no other text.
             data['experience'] = []
         if 'education' not in data:
             data['education'] = []
+        
+        # Rank and classify skills to get top 5 technology and domain skills
+        if data.get('skills') and len(data['skills']) > 0:
+            try:
+                skill_ranking = rank_and_classify_skills(
+                    resume_text=text,
+                    all_skills=data['skills'],
+                    experience_data=data.get('experience', []),
+                    top_n=5
+                )
+                data['top_technology_skills'] = skill_ranking.get('top_technology_skills', [])
+                data['top_domain_skills'] = skill_ranking.get('top_domain_skills', [])
+                data['technology_skills_with_scores'] = skill_ranking.get('technology_skills_with_scores', [])
+                data['domain_skills_with_scores'] = skill_ranking.get('domain_skills_with_scores', [])
+                data['skill_ranking_metadata'] = skill_ranking.get('ranking_metadata', {})
+                logger.info(f"Skill ranking complete: {len(data['top_technology_skills'])} tech, {len(data['top_domain_skills'])} domain")
+            except Exception as e:
+                logger.error(f"Skill ranking failed: {str(e)}")
+                data['top_technology_skills'] = data['skills'][:5]
+                data['top_domain_skills'] = []
+        else:
+            data['top_technology_skills'] = []
+            data['top_domain_skills'] = []
         
         # Add success flag
         data['success'] = True
