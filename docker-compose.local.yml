@@ -1,0 +1,188 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (Local)
+  postgres:
+    image: postgres:15-alpine
+    container_name: hotgigs-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hotgigs
+      POSTGRES_PASSWORD: hotgigs_password_2024
+      POSTGRES_DB: hotgigs_db
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "5432:5432"
+    networks:
+      - hotgigs-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./backend/hotgigs-api/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hotgigs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Celery broker and caching
+  redis:
+    image: redis:7-alpine
+    container_name: hotgigs-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - hotgigs-network
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend/hotgigs-api
+      dockerfile: Dockerfile
+    container_name: hotgigs-backend
+    restart: unless-stopped
+    environment:
+      # Local PostgreSQL Connection
+      DATABASE_URL: postgresql://hotgigs:hotgigs_password_2024@postgres:5432/hotgigs_db
+      
+      # JWT Configuration
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production-min-32-chars-long-for-security}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      
+      # CORS Configuration
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://frontend:80,http://localhost:80
+      
+      # OpenAI API (for AI features)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      
+      # Redis and Celery Configuration
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      
+      # Google Drive API (optional)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8000/api/google-drive/auth/callback}
+      
+      # File Upload Configuration
+      MAX_UPLOAD_SIZE: 10485760
+      UPLOAD_DIR: /app/uploads
+      
+      # Application Settings
+      PYTHONUNBUFFERED: 1
+      PYTHONPATH: /app/src
+      
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hotgigs-network
+    volumes:
+      - ./backend/hotgigs-api/uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./frontend/hotgigs-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+        VITE_WS_URL: ws://localhost:8000/ws
+    container_name: hotgigs-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - hotgigs-network
+    environment:
+      NGINX_HOST: localhost
+      NGINX_PORT: 80
+
+  # Celery Worker for background tasks
+  celery-worker:
+    build:
+      context: ./backend/hotgigs-api
+      dockerfile: Dockerfile
+    container_name: hotgigs-celery-worker
+    restart: unless-stopped
+    command: celery -A src.core.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      DATABASE_URL: postgresql://hotgigs:hotgigs_password_2024@postgres:5432/hotgigs_db
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      PYTHONUNBUFFERED: 1
+      PYTHONPATH: /app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - hotgigs-network
+    volumes:
+      - ./backend/hotgigs-api/uploads:/app/uploads
+
+  # Celery Beat for scheduled tasks
+  celery-beat:
+    build:
+      context: ./backend/hotgigs-api
+      dockerfile: Dockerfile
+    container_name: hotgigs-celery-beat
+    restart: unless-stopped
+    command: celery -A src.core.celery_app beat --loglevel=info
+    environment:
+      DATABASE_URL: postgresql://hotgigs:hotgigs_password_2024@postgres:5432/hotgigs_db
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      PYTHONUNBUFFERED: 1
+      PYTHONPATH: /app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - hotgigs-network
+
+networks:
+  hotgigs-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  uploads:
+    driver: local
+
